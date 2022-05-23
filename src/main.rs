@@ -1,4 +1,10 @@
+use actor::Actor;
 use macroquad::prelude::*;
+
+
+mod animation;
+mod actor;
+mod display;
 
 #[macroquad::main("kg-g")]
 async fn main() {
@@ -22,28 +28,20 @@ async fn main() {
     }
     let texture: Texture2D = Texture2D::from_image(&frames_img);
     texture.set_filter(FilterMode::Nearest);
-    let mut position = (screen_width() / 2., screen_height() / 2.,);
+    let mut actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), actor::State::Idle);
 
     loop {
         clear_background(DARKGRAY);
 
-        // let delta = get_frame_time();
+        let delta = get_frame_time();
 
         if is_mouse_button_released(MouseButton::Left) {
-            position = mouse_position();
+            actor.set_target_position(Vec2::from(mouse_position()));
         }
 
-        draw_texture_ex(
-            texture,
-            position.0 - 32.,
-            position.1 - 32.,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(vec2(64., 64.)),
-                source: Some(Rect::new(0., 0., 16., 16.)),
-                ..Default::default()
-            },
-        );
+        actor.update(delta);
+
+        display::draw_actor(&texture, &actor);
         next_frame().await
     }
 }
