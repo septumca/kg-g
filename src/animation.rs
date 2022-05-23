@@ -1,5 +1,7 @@
 use macroquad::prelude::*;
 
+use crate::timer::Timer;
+
 
 const ANIMATION_THRESHOLD: f32 = 0.07;
 
@@ -29,24 +31,11 @@ impl Frames {
   }
 }
 
-struct Time {
-  act: f32,
-  threshold: f32,
-}
 
-impl Time {
-  pub fn update(&mut self, delta: f32) -> bool {
-    let updated_time = self.act + delta;
-    let over_threshold = updated_time > self.threshold;
-
-    self.act = if over_threshold { 0. } else { updated_time };
-    over_threshold
-  }
-}
 
 pub struct Animation {
   frames: Frames,
-  time: Time,
+  time: Timer,
 }
 
 impl Animation {
@@ -57,10 +46,7 @@ impl Animation {
         act: 0,
         should_loop,
       },
-      time: Time {
-        act: 0.,
-        threshold: ANIMATION_THRESHOLD,
-      }
+      time: Timer::new(ANIMATION_THRESHOLD)
     }
   }
 
@@ -70,7 +56,6 @@ impl Animation {
 
   pub fn update(&mut self, delta: f32) {
     if self.time.update(delta) {
-      self.time.act = 0.;
       self.frames.next_frame();
     }
   }
@@ -150,40 +135,6 @@ mod tests {
 
       frames.next_frame();
       assert_eq!(frames.act_frame(), frames.list[2]);
-    }
-  }
-
-  #[cfg(test)]
-  mod time {
-    use super::super::*;
-
-    fn create() -> Time {
-      Time {
-        act: 0.,
-        threshold: 0.5,
-      }
-    }
-
-    #[test]
-    fn update() {
-      let mut time = create();
-      time.update(0.1);
-      assert_eq!(time.act, 0.1);
-      time.update(0.1);
-      assert_eq!(time.act, 0.2);
-      time.update(0.1);
-      assert_eq!(time.act, 0.3);
-    }
-
-    #[test]
-    fn update_over() {
-      let mut time = create();
-      time.update(0.4);
-      assert_eq!(time.act, 0.4);
-      time.update(0.1);
-      assert_eq!(time.act, 0.5);
-      time.update(0.1);
-      assert_eq!(time.act, 0.);
     }
   }
 

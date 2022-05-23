@@ -3,8 +3,6 @@ use macroquad::prelude::*;
 use crate::actor::Actor;
 
 pub fn draw_actor(texture: &Texture2D, actor: &Actor) {
-
-
   draw_texture_ex(
     *texture,
     actor.position.x - 32.,

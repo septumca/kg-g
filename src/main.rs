@@ -1,34 +1,35 @@
-use actor::Actor;
+use actor::{Actor, PlayerActor, AiActor};
 use macroquad::prelude::*;
+use utils::{customize_image, ReplaceColors};
 
 
 mod animation;
 mod actor;
 mod display;
+mod utils;
+mod timer;
 
 #[macroquad::main("kg-g")]
 async fn main() {
-    let mut frames_img = Image::from_file_with_format(include_bytes!("../assets/frames.png"), Some(ImageFormat::Png));
+    let colors_actor = ReplaceColors::new(
+        Color::from_rgba(223, 113, 38, 255),
+        Color::from_rgba(172, 50, 50, 255),
+        Color::from_rgba(238, 195, 145, 255),
+        Color::from_rgba(0, 0, 0, 255),
+    );
 
-    for x in 0..frames_img.width() as u32 {
-        for y in 0..frames_img.height() as u32 {
-            let c = frames_img.get_pixel(x, y);
-            let new_c = match ((c.r*255.) as u32, (c.g*255.) as u32, (c.b*255.) as u32) {
-                (245, 115, 147) => Color::from_rgba(223, 113, 38, 255),
-                (245, 135, 147) => Color::from_rgba(172, 50, 50, 255),
-                (245, 145, 147) => Color::from_rgba(238, 195, 145, 255),
-                (245, 95, 147) => Color::from_rgba(0, 0, 0, 255),
-                _ => c
-            };
+    let colors_enemy = ReplaceColors::new(
+        Color::from_rgba(57, 99, 50, 255),
+        Color::from_rgba(66, 55, 29, 255),
+        Color::from_rgba(66, 99, 50, 255),
+        Color::from_rgba(0, 0, 0, 255),
+    );
 
-            if c != new_c {
-                frames_img.set_pixel(x, y, new_c);
-            }
-        }
-    }
-    let texture: Texture2D = Texture2D::from_image(&frames_img);
-    texture.set_filter(FilterMode::Nearest);
-    let mut actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), actor::State::Idle);
+    let image = Image::from_file_with_format(include_bytes!("../assets/frames.png"), Some(ImageFormat::Png));
+    let texture_actor = customize_image(image.sub_image(Rect::new(0., 0., 16. * 3., 16.)), colors_actor);
+    let texture_enemy = customize_image(image.sub_image(Rect::new(16. * 3., 0., 16. * 3., 16.)), colors_enemy);
+    let mut player = PlayerActor{ actor: Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), actor::State::Idle) };
+    let mut enemy = AiActor::new(Actor::new(Vec2::new(screen_width() / 2. + 50., screen_height() / 2.), actor::State::Idle));
 
     loop {
         clear_background(DARKGRAY);
@@ -36,12 +37,14 @@ async fn main() {
         let delta = get_frame_time();
 
         if is_mouse_button_released(MouseButton::Left) {
-            actor.set_target_position(Vec2::from(mouse_position()));
+            player.actor.set_target_position(Vec2::from(mouse_position()));
         }
 
-        actor.update(delta);
+        player.actor.update(delta);
+        enemy.update(delta);
 
-        display::draw_actor(&texture, &actor);
+        display::draw_actor(&texture_actor, &player.actor);
+        display::draw_actor(&texture_enemy, &enemy.actor);
         next_frame().await
     }
 }

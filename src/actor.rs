@@ -1,6 +1,6 @@
-use macroquad::prelude::*;
+use macroquad::{prelude::*, rand::{rand, ChooseRandom}};
 
-use crate::animation::Animation;
+use crate::{animation::Animation, timer::Timer};
 
 const SPEED: f32 = 100.0;
 
@@ -20,7 +20,7 @@ fn get_walking_animation() -> Animation {
   )
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum State {
   Idle,
   Walking(Vec2),
@@ -30,6 +30,53 @@ fn get_animation_by_state(state: &State) -> Animation {
   match state {
       State::Idle => get_idle_animation(),
       State::Walking(_) => get_walking_animation(),
+  }
+}
+
+pub struct PlayerActor {
+  pub actor: Actor,
+}
+
+pub struct AiActor {
+  pub actor: Actor,
+  timer: Timer
+}
+
+impl AiActor {
+  pub fn new(actor: Actor) -> Self {
+    let timer = Timer::new(rand::gen_range::<f32>(2., 10.));
+    println!("Timer is set to {:?}", timer);
+    Self {
+      actor,
+      timer,
+    }
+  }
+
+  fn refresh_timer(&mut self) {
+    self.timer = Timer::new(rand::gen_range::<f32>(2., 10.))
+  }
+
+  pub fn update(&mut self, delta_time: f32) {
+    self.actor.update(delta_time);
+
+    if self.timer.update(delta_time) {
+      let opts = vec![
+        State::Idle,
+        State::Walking(Vec2::new(rand::gen_range::<f32>(0., 300.), rand::gen_range::<f32>(0., 300.)))
+      ];
+      let new_state = opts.choose().expect("new state should be selected");
+      println!("Switching state to: {:?}", new_state);
+
+      match *new_state {
+        State::Walking(tp) => {
+          self.actor.set_target_position(tp);
+        },
+        state => {
+          self.actor.set_new_state(state)
+        },
+      }
+      self.refresh_timer();
+    }
   }
 }
 
@@ -82,7 +129,6 @@ impl Actor {
       State::Idle => (),
       State::Walking(target_position) => self.move_to_target_position(delta_time, target_position),
     };
-
   }
 }
 
