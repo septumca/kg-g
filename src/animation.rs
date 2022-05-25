@@ -5,6 +5,7 @@ use crate::timer::Timer;
 
 const ANIMATION_THRESHOLD: f32 = 0.07;
 
+#[derive(Debug, Clone)]
 struct Frames {
   list: Vec<Rect>,
   act: usize,
@@ -25,14 +26,11 @@ impl Frames {
   pub fn act_frame(&self) -> Rect {
     self.list[self.act]
   }
-
-  pub fn is_finished(&self) -> bool {
-    !self.should_loop && self.act == self.list.len() - 1
-  }
 }
 
 
 
+#[derive(Debug, Clone)]
 pub struct Animation {
   frames: Frames,
   time: Timer,
@@ -48,6 +46,10 @@ impl Animation {
       },
       time: Timer::new(ANIMATION_THRESHOLD)
     }
+  }
+
+  pub fn is_finished(&self) -> bool {
+    return self.frames.should_loop && self.frames.act == self.frames.list.len() - 1
   }
 
   pub fn get_act_frame(&self) -> Rect {
@@ -81,17 +83,6 @@ mod tests {
     fn act() {
       let frames = create(true);
       assert_eq!(frames.act_frame(), frames.list[0]);
-    }
-
-    #[test]
-    fn is_finished() {
-      let mut frames = create(false);
-      frames.next_frame();
-      assert_eq!(frames.is_finished(), false);
-      frames.next_frame();
-      assert_eq!(frames.is_finished(), true);
-      frames.next_frame();
-      assert_eq!(frames.is_finished(), true);
     }
 
     #[test]
@@ -141,6 +132,21 @@ mod tests {
   #[cfg(test)]
   mod animation {
     use super::super::*;
+
+    #[test]
+    fn is_finished() {
+      let r1 = Rect::new(0., 0., 16., 16.);
+      let r2 = Rect::new(16., 0., 16., 16.);
+      let r3 = Rect::new(32., 0., 16., 16.);
+      let mut anim = Animation::new(vec![r1, r2, r3], true);
+
+      anim.frames.next_frame();
+      assert_eq!(anim.is_finished(), false);
+      anim.frames.next_frame();
+      assert_eq!(anim.is_finished(), true);
+      anim.frames.next_frame();
+      assert_eq!(anim.is_finished(), true);
+    }
 
     #[test]
     fn update_looping() {

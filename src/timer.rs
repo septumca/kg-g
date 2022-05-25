@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Timer {
   act: f32,
   threshold: f32,

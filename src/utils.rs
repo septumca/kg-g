@@ -1,7 +1,6 @@
 use macroquad::prelude::*;
 
 
-
 pub struct ReplaceColors {
   armor: Color,
   detail: Color,
