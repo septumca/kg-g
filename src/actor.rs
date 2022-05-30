@@ -1,3 +1,4 @@
+use hecs::{World, Entity};
 use macroquad::{prelude::*};
 
 use crate::{animation::Animation};
@@ -27,103 +28,136 @@ pub enum State {
   Walking(Vec2),
 }
 
-fn animation_by_state<'a>(state: &'a State) -> Animation {
-  match state {
-      State::Idle => get_idle_animation(),
-      State::Walking(_) => get_walking_animation(),
-  }
-}
 
 pub struct PlayerActor;
+pub struct ActorState(State);
+pub struct Position(pub Vec2);
+pub struct Rotation(pub f32);
+pub struct Velocity(Vec2);
+pub struct NextActorState(pub State);
+pub struct TargetPosition(Option<Vec2>);
 
-#[derive(Debug, Clone)]
-pub struct Actor {
-  pub animation: Animation,
-  pub position: Vec2,
-  state: State,
-  pub rotation: f32,
-  speed: f32,
+
+
+pub fn spawn_actor(world: &mut World, texture: Texture2D, position: Vec2) -> Entity {
+  world.spawn((
+    Position(position),
+    Rotation(0.),
+    ActorState(State::Idle),
+    Velocity(Vec2::ZERO),
+    TargetPosition(None),
+    texture,
+    get_idle_animation(),
+  ))
 }
 
-impl Actor {
-  pub fn new(position: Vec2, state: State) -> Self {
-    Self {
-      animation: animation_by_state(&state),
-      position,
-      state,
-      rotation: 0.,
-      speed: SPEED,
-    }
-  }
+pub fn refresh_states(world: &mut World) {
+  let mut updated_ids: Vec<Entity> = vec![];
+  for (id, (state, velocity, target_position, rotation, position, animation, next_state)) in
+    &mut world.query::<(&mut ActorState, &mut Velocity, &mut TargetPosition, &mut Rotation, &Position, &mut Animation, &NextActorState)>()
+  {
+    state.0 = next_state.0;
+    updated_ids.push(id);
 
-  pub fn get_source(&self) -> Rect {
-    self.animation.get_act_frame()
-  }
-
-  pub fn set_new_state(&mut self, state: State) {
-    match state {
-      State::Walking(target_position) => {
-        self.rotation = if self.position.x > target_position.x { 1. } else { 0. };
+    match state.0 {
+      State::Idle => {
+        *animation = get_idle_animation();
+        target_position.0 = None;
+        velocity.0 = Vec2::ZERO;
+      },
+      State::Walking(tp) => {
+        target_position.0 = Some(tp);
+        velocity.0 = (tp - position.0).normalize() * SPEED;
+        rotation.0 = if position.0.x > tp.x { 1. } else { 0. };
+        *animation = get_walking_animation();
       }
-      _ => ()
     };
-    self.state = state;
-    self.animation = animation_by_state(&self.state);
   }
 
-  fn move_to_target_position(&mut self, delta_time: f32, target_position: Vec2) {
-    let delta_v = (target_position - self.position).normalize() * self.speed * delta_time;
-    self.position += delta_v;
+  for id in updated_ids {
+    let _ = world.remove_one::<NextActorState>(id);
+  }
+}
 
-    if self.position.distance_squared(target_position) < 10.0 {
-      self.position = target_position;
+fn stop(vel: &mut Velocity, tp: &mut TargetPosition, animation: &mut Animation) {
+  vel.0 = Vec2::ZERO;
+  tp.0 = None;
+  animation.set_idle();
+}
 
-      self.set_new_state(State::Idle);
+fn walkto(pos: &mut Position, rotation: &mut Rotation, vel: &mut Velocity, tp: &mut TargetPosition, animation: &mut Animation) {
+  vel.0 = (tp - position.0).normalize() * SPEED;
+  tp.0 = None;
+  animation.set_idle();
+}
+
+fn update_position(pos: &mut Position, vel: &Velocity, tp: &TargetPosition, delta: f32) -> bool {
+  pos.0 += vel.0 * delta;
+
+  if let Some(tp) = tp.0 {
+    if pos.0.distance_squared(tp) < 10.0 {
+      pos.0 = tp;
+      return true;
     }
   }
 
-  pub fn update(&mut self, delta_time: f32) {
-    self.animation.update(delta_time);
-
-    match self.state {
-      State::Idle => (),
-      State::Walking(target_position) => self.move_to_target_position(delta_time, target_position),
-    };
-  }
+  false
 }
 
-#[cfg(test)]
-mod tests {
-  use super::*;
+// pub fn update(world: &mut World, delta: f32) {
+//   let mut reached_end: Vec<Entity> = vec![];
+//   for (id, (velocity, position, target_position))
+//     in &mut world.query::<(&Velocity, &mut Position, &TargetPosition)>()
+//   {
+//     if let Some(tp) = target_position {
+//       position.0 += velocity.0 * delta;
 
-  fn create() -> Actor {
-    Actor::new(Vec2::ZERO, State::Idle)
-  }
+//       if position.0.distance_squared(tp) < 10.0 {
+//         position.0 = tp;
+//         reached_end.push(id);
+//       }
+//     }
 
-  #[test]
-  fn update() {
-    let mut actor = create();
-    let tp = Vec2::new(6., 6.);
-    let delta_time = 0.01;
-    let delta_v = (tp - Vec2::ZERO).normalize();
+//   }
 
-    actor.set_new_state(State::Walking(tp));
-    assert_eq!(actor.state, State::Walking(tp));
+//   for id in reached_end {
+//     let _ = world.insert_one(id, NextActorState(State::Idle));
+//   }
+// }
 
-    actor.update(delta_time);
-    assert_eq!(actor.position, Vec2::ZERO + delta_v * SPEED * delta_time);
 
-    actor.update(delta_time);
-    actor.update(delta_time);
-    actor.update(delta_time);
-    actor.update(delta_time);
-    actor.update(delta_time);
-    actor.update(delta_time);
-    actor.update(delta_time);
-    actor.update(delta_time);
-    actor.update(delta_time);
+// #[cfg(test)]
+// mod tests {
+//   use super::*;
 
-    assert_eq!(actor.state, State::Idle);
-    assert_eq!(actor.get_source(), Rect::new(0., 0., 16., 16.));
-  }
-}
+//   fn create() -> Actor {
+//     Actor::new(Vec2::ZERO, State::Idle)
+//   }
+
+//   #[test]
+//   fn update() {
+//     let mut actor = create();
+//     let tp = Vec2::new(6., 6.);
+//     let delta_time = 0.01;
+//     let delta_v = (tp - Vec2::ZERO).normalize();
+
+//     actor.set_new_state(State::Walking(tp));
+//     assert_eq!(actor.state, State::Walking(tp));
+
+//     actor.update(delta_time);
+//     assert_eq!(actor.position, Vec2::ZERO + delta_v * SPEED * delta_time);
+
+//     actor.update(delta_time);
+//     actor.update(delta_time);
+//     actor.update(delta_time);
+//     actor.update(delta_time);
+//     actor.update(delta_time);
+//     actor.update(delta_time);
+//     actor.update(delta_time);
+//     actor.update(delta_time);
+//     actor.update(delta_time);
+
+//     assert_eq!(actor.state, State::Idle);
+//     assert_eq!(actor.get_source(), Rect::new(0., 0., 16., 16.));
+//   }
+// }

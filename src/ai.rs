@@ -1,12 +1,15 @@
+use std::ops::Deref;
+
+use hecs::{Entity, World};
 use macroquad::{prelude::*};
 
-use crate::{actor::{State, Actor}, timer::Timer};
+use crate::{actor::{State, Position}, timer::Timer, animation::Animation};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum AiState {
   Idle,
   Wandering,
-  // Following,
+  Following(Entity),
   // Attacking
 }
 
@@ -65,11 +68,15 @@ impl Ai {
     self.timer = Timer::new(rand::gen_range::<f32>(0.5, 2.))
   }
 
-  pub fn update(&mut self, delta_time: f32, actor: &Actor) -> Option<State> {
-    if self.timer.update(delta_time) || actor.animation.is_finished() {
+  pub fn update(&mut self, world: &World, delta_time: f32, animation: &Animation) -> Option<State> {
+    if self.timer.update(delta_time) || animation.is_finished() {
       let new_ai_state = self.weighted_states.get_next_state();
 
       let new_state = match new_ai_state {
+        AiState::Following(id) => {
+          let mut q = world.query_one::<&Position>(id).unwrap();
+          if let Some(pos) = q.get() { State::Walking(pos.deref().0) } else { State::Idle }
+        },
         AiState::Wandering => {
           let tp = Vec2::new(rand::gen_range::<f32>(32., screen_width() - 32.), rand::gen_range::<f32>(32., screen_height() - 32.));
           State::Walking(tp)

@@ -61,6 +61,23 @@ impl Animation {
       self.frames.next_frame();
     }
   }
+
+  pub fn set_walk(&mut self) {
+    self.frames.list = vec![
+      Rect::new(0., 0., 16., 16.),
+      Rect::new(16., 0., 16., 16.),
+      Rect::new(0., 0., 16., 16.),
+      Rect::new(32., 0., 16., 16.),
+    ];
+    self.frames.should_loop = true;
+  }
+
+  pub fn set_idle(&mut self) {
+    self.frames.list = vec![
+      Rect::new(0., 0., 16., 16.)
+    ];
+    self.frames.should_loop = false;
+  }
 }
 
 mod tests {
