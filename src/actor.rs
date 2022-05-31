@@ -4,9 +4,6 @@ use macroquad::{prelude::*};
 
 use crate::{animation::Animation};
 
-const SPEED: f32 = 100.;
-
-
 static COUNTER: AtomicUsize = AtomicUsize::new(1);
 
 fn get_id() -> usize {
@@ -39,13 +36,13 @@ pub struct Movable {
 }
 
 impl Movable {
-  pub fn new(position: Vec2) -> Self {
+  pub fn new(position: Vec2, speed: f32) -> Self {
     Self {
       position,
       target_position: None,
       velocity: Vec2::ZERO,
       rotation: 0.,
-      speed: SPEED,
+      speed,
     }
   }
 
@@ -89,11 +86,11 @@ pub struct Actor {
 }
 
 impl Actor {
-  pub fn new(position: Vec2) -> Self {
+  pub fn new(position: Vec2, speed: f32) -> Self {
     Self {
       id: get_id(),
       animation: get_idle_animation(),
-      movable: Movable::new(position),
+      movable: Movable::new(position, speed),
     }
   }
 
@@ -137,8 +134,10 @@ impl Actor {
 mod tests {
   use super::*;
 
+  const SPEED: f32 = 100.;
+
   fn create() -> Actor {
-    Actor::new(Vec2::ZERO)
+    Actor::new(Vec2::ZERO, SPEED)
   }
 
   #[test]

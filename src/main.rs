@@ -13,6 +13,7 @@ mod utils;
 mod timer;
 mod ai;
 
+const ENEMIES_COUNT: usize = 32;
 
 #[macroquad::main("kg-g")]
 async fn main() {
@@ -34,18 +35,18 @@ async fn main() {
   let texture_actor = customize_image(image.sub_image(Rect::new(0., 0., 16. * 3., 16.)), colors_actor);
   let texture_enemy = customize_image(image.sub_image(Rect::new(16. * 3., 0., 16. * 3., 16.)), colors_enemy);
 
-  let mut player_actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.));
-  let ai_actor1 = Actor::new(Vec2::new(screen_width() / 2. - 50., screen_height() / 2.));
-  let ai_actor2 = Actor::new(Vec2::new(screen_width() / 2. - 100., screen_height() / 2.));
+  let mut player_actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), 100.);
 
-  let mut ai_controllers = vec![
-    Ai::new(WeightedStates::new_idle_wandering(&[1, 10, 30]), ai_actor1.get_id()),
-    Ai::new(WeightedStates::new_idle_wandering(&[2, 10, 30]), ai_actor2.get_id())
-  ];
-
+  let mut ai_controllers: Vec<Ai> = vec![];
   let mut ai_actors: HashMap<usize, Actor> = HashMap::new();
-  ai_actors.insert(ai_actor1.get_id(), ai_actor1);
-  ai_actors.insert(ai_actor2.get_id(), ai_actor2);
+  for c in 0..ENEMIES_COUNT {
+    let x_mod = (c % 10) as f32;
+    let y_mod = (c / 10) as f32;
+    let actor = Actor::new(Vec2::new(32. + x_mod * 64., 32. + y_mod * 64.), 80.);
+    let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 30]), actor.get_id());
+    ai_actors.insert(actor.get_id(), actor);
+    ai_controllers.push(ai);
+  }
 
   loop {
     clear_background(DARKGRAY);
@@ -73,5 +74,5 @@ async fn main() {
     }
 
     next_frame().await
-    }
+  }
 }
