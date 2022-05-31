@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use macroquad::{prelude::*};
 
-use crate::{animation::Animation};
+use crate::{animation::Animation, movable::Movable, cd::BoundRect};
 
 static COUNTER: AtomicUsize = AtomicUsize::new(1);
 
@@ -27,62 +27,11 @@ fn get_walking_animation() -> Animation {
 }
 
 #[derive(Debug, Clone)]
-pub struct Movable {
-  pub position: Vec2,
-  pub target_position: Option<Vec2>,
-  pub velocity: Vec2,
-  pub rotation: f32,
-  speed: f32,
-}
-
-impl Movable {
-  pub fn new(position: Vec2, speed: f32) -> Self {
-    Self {
-      position,
-      target_position: None,
-      velocity: Vec2::ZERO,
-      rotation: 0.,
-      speed,
-    }
-  }
-
-  pub fn set_moving_to(&mut self, target_position: Vec2) {
-    self.rotation = if self.position.x > target_position.x { 1. } else { 0. };
-    self.velocity = (target_position - self.position).normalize() * self.speed;
-    self.target_position = Some(target_position);
-  }
-
-  pub fn set_to_target_position(&mut self) {
-    if let Some(tp) = self.target_position {
-      self.position = tp;
-    }
-  }
-  pub fn stop(&mut self) {
-    self.velocity = Vec2::ZERO;
-    self.target_position = None;
-  }
-
-  pub fn is_moving(&self) -> bool {
-    self.velocity != Vec2::ZERO
-  }
-
-  pub fn has_reached_target_position(&self) -> bool {
-    if let Some(tp) = self.target_position {
-      return self.position.distance_squared(tp) < 10.0;
-    }
-    return false;
-  }
-
-  pub fn update(&mut self, delta_t: f32) {
-    self.position += self.velocity * delta_t;
-  }
-}
-
-#[derive(Debug, Clone)]
 pub struct Actor {
   id: usize,
   pub animation: Animation,
   pub movable: Movable,
+  pub bound_rect: BoundRect,
 }
 
 impl Actor {
@@ -90,7 +39,8 @@ impl Actor {
     Self {
       id: get_id(),
       animation: get_idle_animation(),
-      movable: Movable::new(position, speed),
+      movable: Movable::new(position.clone(), speed),
+      bound_rect: BoundRect::new(position, 24., 32.),
     }
   }
 
@@ -122,6 +72,8 @@ impl Actor {
     let is_moving = self.movable.is_moving();
     if is_moving {
       self.movable.update(delta_t);
+      self.bound_rect.update_position(&self.movable.position);
+
       if self.movable.has_reached_target_position() {
         self.movable.set_to_target_position();
         self.stop();

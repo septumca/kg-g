@@ -2,6 +2,7 @@ use std::collections::{HashMap};
 
 use actor::{Actor};
 use ai::{WeightedStates, Ai};
+use display::Renderer;
 use macroquad::prelude::*;
 use utils::{customize_image, ReplaceColors};
 
@@ -12,8 +13,11 @@ mod display;
 mod utils;
 mod timer;
 mod ai;
+mod movable;
+mod projectile;
+mod cd;
 
-const ENEMIES_COUNT: usize = 32;
+const ENEMIES_COUNT: usize = 2 * 12;
 
 #[macroquad::main("kg-g")]
 async fn main() {
@@ -31,6 +35,7 @@ async fn main() {
       Color::from_rgba(0, 0, 0, 255),
   );
 
+  let renderer = Renderer { debug: true };
   let image = Image::from_file_with_format(include_bytes!("../assets/frames.png"), Some(ImageFormat::Png));
   let texture_actor = customize_image(image.sub_image(Rect::new(0., 0., 16. * 3., 16.)), colors_actor);
   let texture_enemy = customize_image(image.sub_image(Rect::new(16. * 3., 0., 16. * 3., 16.)), colors_enemy);
@@ -40,8 +45,8 @@ async fn main() {
   let mut ai_controllers: Vec<Ai> = vec![];
   let mut ai_actors: HashMap<usize, Actor> = HashMap::new();
   for c in 0..ENEMIES_COUNT {
-    let x_mod = (c % 10) as f32;
-    let y_mod = (c / 10) as f32;
+    let x_mod = (c % 12) as f32;
+    let y_mod = (c / 12) as f32;
     let actor = Actor::new(Vec2::new(32. + x_mod * 64., 32. + y_mod * 64.), 80.);
     let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 30]), actor.get_id());
     ai_actors.insert(actor.get_id(), actor);
@@ -68,10 +73,12 @@ async fn main() {
     }
 
 
-    display::draw_actor(&texture_actor, &player_actor);
+    renderer.draw_actor(&texture_actor, &player_actor);
     for actor in ai_actors.values() {
-      display::draw_actor(&texture_enemy, &actor);
+      renderer.draw_actor(&texture_enemy, &actor);
     }
+
+    Renderer::draw_debug();
 
     next_frame().await
   }

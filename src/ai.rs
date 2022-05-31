@@ -82,7 +82,7 @@ impl Ai {
       let new_state = self.weighted_states.get_next_state();
       self.state = match new_state {
         AiState::Following => {
-          if actor.get_source().intersect(player_actor.get_source()).is_some() {
+          if actor.bound_rect.collide_with(&player_actor.bound_rect) {
             let x = 32.0_f32.max(player_actor.movable.position.x + rand::gen_range::<f32>(-100., 100.)).min(screen_width() - 32.);
             let y = 32.0_f32.max(player_actor.movable.position.y + rand::gen_range::<f32>(-100., 100.)).min(screen_height() - 32.);
             actor.move_to_and_animate(Vec2::new(x, y));
