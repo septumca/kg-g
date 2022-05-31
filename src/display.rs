@@ -11,6 +11,7 @@ impl Renderer {
   pub fn draw_debug() {
     let fps = get_fps();
     draw_text(format!("fps: {}", fps).as_str(), 4.0, 24.0, 32., WHITE);
+    draw_text(format!("screen size: {}x{}", screen_width(), screen_height()).as_str(), 4.0, 56.0, 32., WHITE);
   }
 
   fn draw_cd_data(bounding_rect: &BoundRect) {
