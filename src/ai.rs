@@ -1,12 +1,12 @@
 use macroquad::{prelude::*};
 
-use crate::{actor::{State, Actor}, timer::Timer};
+use crate::{actor::{Actor}, timer::Timer};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum AiState {
   Idle,
   Wandering,
-  // Following,
+  Following,
   // Attacking
 }
 
@@ -29,6 +29,14 @@ impl WeightedStates {
     }
   }
 
+  pub fn new_idle_wandering(weights: &[i32; 3]) -> Self {
+    Self::new(vec![
+      (weights[0], AiState::Idle),
+      (weights[1], AiState::Wandering),
+      (weights[2], AiState::Following),
+    ])
+  }
+
   fn get_state_by_weight(&self, weight: i32) -> AiState {
     let mut result = weight;
     for (w, s) in &self.states {
@@ -48,16 +56,20 @@ impl WeightedStates {
 }
 
 pub struct Ai {
+  state: AiState,
   weighted_states: WeightedStates,
-  timer: Timer
+  timer: Timer,
+  pub actor_id: usize,
 }
 
 impl Ai {
-  pub fn new(weighted_states: WeightedStates) -> Self {
+  pub fn new(weighted_states: WeightedStates, actor_id: usize) -> Self {
     let timer = Timer::new(rand::gen_range::<f32>(0.5, 2.));
     Self {
+      state: AiState::Idle,
       timer,
-      weighted_states
+      weighted_states,
+      actor_id
     }
   }
 
@@ -65,21 +77,28 @@ impl Ai {
     self.timer = Timer::new(rand::gen_range::<f32>(0.5, 2.))
   }
 
-  pub fn update(&mut self, delta_time: f32, actor: &Actor) -> Option<State> {
+  pub fn update(&mut self, delta_time: f32, actor: &mut Actor, player_actor: &Actor) {
     if self.timer.update(delta_time) || actor.animation.is_finished() {
-      let new_ai_state = self.weighted_states.get_next_state();
-
-      let new_state = match new_ai_state {
+      self.state =  self.weighted_states.get_next_state();
+      match self.state {
+        AiState::Following => (),
         AiState::Wandering => {
           let tp = Vec2::new(rand::gen_range::<f32>(32., screen_width() - 32.), rand::gen_range::<f32>(32., screen_height() - 32.));
-          State::Walking(tp)
+          actor.move_to(tp);
         },
-        _ => State::Idle,
+        AiState::Idle => {
+          actor.stop();
+        },
       };
       self.refresh_timer();
-      return Some(new_state);
     }
 
-    None
+    match self.state {
+      AiState::Following => {
+        let tp = Vec2::new(player_actor.movable.position.x, player_actor.movable.position.y);
+        actor.move_to(tp);
+      }
+      _ => (),
+    };
   }
 }

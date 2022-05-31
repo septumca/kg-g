@@ -49,7 +49,7 @@ impl Animation {
   }
 
   pub fn is_finished(&self) -> bool {
-    return self.frames.should_loop && self.frames.act == self.frames.list.len() - 1
+    return !self.frames.should_loop && self.frames.act == self.frames.list.len() - 1
   }
 
   pub fn get_act_frame(&self) -> Rect {
@@ -138,7 +138,7 @@ mod tests {
       let r1 = Rect::new(0., 0., 16., 16.);
       let r2 = Rect::new(16., 0., 16., 16.);
       let r3 = Rect::new(32., 0., 16., 16.);
-      let mut anim = Animation::new(vec![r1, r2, r3], true);
+      let mut anim = Animation::new(vec![r1, r2, r3], false);
 
       anim.frames.next_frame();
       assert_eq!(anim.is_finished(), false);
