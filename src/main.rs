@@ -52,7 +52,7 @@ async fn main() {
     let delta = get_frame_time();
 
     if is_mouse_button_released(MouseButton::Left) {
-      player_actor.move_to(Vec2::from(mouse_position()));
+      player_actor.move_to_and_animate(Vec2::from(mouse_position()));
     }
 
     for ai in &mut ai_controllers {

@@ -29,7 +29,6 @@ fn get_walking_animation() -> Animation {
   )
 }
 
-
 #[derive(Debug, Clone)]
 pub struct Movable {
   pub position: Vec2,
@@ -107,6 +106,10 @@ impl Actor {
   }
 
   pub fn move_to(&mut self, target_position: Vec2) {
+    self.movable.set_moving_to(target_position);
+  }
+
+  pub fn move_to_and_animate(&mut self, target_position: Vec2) {
     self.animation = get_walking_animation();
     self.movable.set_moving_to(target_position);
   }

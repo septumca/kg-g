@@ -79,19 +79,30 @@ impl Ai {
 
   pub fn update(&mut self, delta_time: f32, actor: &mut Actor, player_actor: &Actor) {
     if self.timer.update(delta_time) || actor.animation.is_finished() {
-      self.state =  self.weighted_states.get_next_state();
-      match self.state {
-        AiState::Following => (),
+      let new_state = self.weighted_states.get_next_state();
+      self.state = match new_state {
+        AiState::Following => {
+          if actor.get_source().intersect(player_actor.get_source()).is_some() {
+            let x = 32.0_f32.max(player_actor.movable.position.x + rand::gen_range::<f32>(-100., 100.)).min(screen_width() - 32.);
+            let y = 32.0_f32.max(player_actor.movable.position.y + rand::gen_range::<f32>(-100., 100.)).min(screen_height() - 32.);
+            actor.move_to_and_animate(Vec2::new(x, y));
+            AiState::Wandering
+          } else {
+            new_state
+          }
+        },
         AiState::Wandering => {
           let tp = Vec2::new(rand::gen_range::<f32>(32., screen_width() - 32.), rand::gen_range::<f32>(32., screen_height() - 32.));
-          actor.move_to(tp);
+          actor.move_to_and_animate(tp);
+          new_state
         },
         AiState::Idle => {
           actor.stop();
-        },
+          new_state
+        }
       };
       self.refresh_timer();
-    }
+    };
 
     match self.state {
       AiState::Following => {
