@@ -20,7 +20,7 @@ mod projectile;
 mod cd;
 mod player;
 
-const ENEMIES_COUNT: usize = 12;
+const ENEMIES_COUNT: usize = 24;
 
 #[macroquad::main("kg-g")]
 async fn main() {
@@ -61,14 +61,13 @@ async fn main() {
   for c in 0..ENEMIES_COUNT {
     let x_mod = (c % 12) as f32;
     let y_mod = (c / 12) as f32;
-    let actor = Actor::new(Vec2::new(32. + x_mod * 64., 32. + y_mod * 64.), 80.);
+    let actor = Actor::new(Vec2::new(32. + x_mod * 64., 64. + y_mod * 64.), 80.);
     let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 30]));
     ai_controllers.insert(actor.get_id(), ai);
     ai_actors.insert(actor.get_id(), actor);
   }
 
   let mut projectiles: Vec<Projectile> = vec![];
-
   loop {
     clear_background(DARKGRAY);
     let delta_t = get_frame_time();
@@ -89,9 +88,25 @@ async fn main() {
 
     player.update(delta_t, &mut projectiles, &ai_actors);
     player.actor.update(delta_t);
+
+    let mut impulses: Vec<(usize, Vec2)> = vec![];
+    for actor_a in ai_actors.values() {
+      for actor_b in ai_actors.values() {
+        if actor_a.get_id() != actor_b.get_id() && actor_a.bound_rect.collide_with(&actor_b.bound_rect) {
+          let impuls = (actor_a.movable.position - actor_b.movable.position).normalize() * 120.;
+          impulses.push((actor_a.get_id(), impuls));
+        }
+      }
+    }
+    for (id, impuls) in impulses {
+      if let Some(actor) = ai_actors.get_mut(&id) {
+        actor.movable.add_impuls(impuls);
+      }
+    }
     for actor in ai_actors.values_mut() {
       actor.update(delta_t);
     }
+
     for projectile in &mut projectiles {
       projectile.update(delta_t);
       if let Some(collided_actor) = ai_actors.values().find(|actor| actor.bound_rect.collide_with(&projectile.bound_rect)) {
@@ -99,7 +114,6 @@ async fn main() {
         ai_actor_ids_to_remove.push(collided_actor.get_id());
       }
     }
-
 
     renderer.draw_actor(&texture_actor, &player.actor);
     for actor in ai_actors.values() {

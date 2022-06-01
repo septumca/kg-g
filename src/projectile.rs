@@ -25,7 +25,7 @@ pub struct Projectile {
 impl Projectile {
   pub fn new(position: Vec2, velocity: Vec2) -> Self {
     Self {
-      movable: Movable::new(position, 150.).add_velocity(velocity),
+      movable: Movable::new(position, 150., 1.).with_velocity(velocity),
       animation: get_flying_animation(),
       bound_rect: BoundRect::new(position, 16., 16.),
       is_alive: true,

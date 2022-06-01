@@ -39,7 +39,7 @@ impl Actor {
     Self {
       id: get_id(),
       animation: get_idle_animation(),
-      movable: Movable::new(position.clone(), speed),
+      movable: Movable::new(position.clone(), speed, 0.8),
       bound_rect: BoundRect::new(position, 24., 32.),
       is_alive: true,
     }
@@ -69,12 +69,10 @@ impl Actor {
 
   pub fn update(&mut self, delta_t: f32) {
     self.animation.update(delta_t);
+    self.movable.update(delta_t);
+    self.bound_rect.update_position(&self.movable.position);
 
-    let is_moving = self.movable.is_moving();
-    if is_moving {
-      self.movable.update(delta_t);
-      self.bound_rect.update_position(&self.movable.position);
-
+    if self.movable.is_moving() {
       if self.movable.has_reached_target_position() {
         self.movable.set_to_target_position();
         self.stop();

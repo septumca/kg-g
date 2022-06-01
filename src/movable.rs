@@ -1,30 +1,39 @@
 
 use macroquad::{prelude::*};
 
+const EPSILON: f32 = 0.004;
 
 #[derive(Debug, Clone)]
 pub struct Movable {
   pub position: Vec2,
   pub target_position: Option<Vec2>,
   pub velocity: Vec2,
+  pub impulses: Vec<Vec2>,
+  pub fraction: f32,
   pub rotation: f32,
   speed: f32,
 }
 
 impl Movable {
-  pub fn new(position: Vec2, speed: f32) -> Self {
+  pub fn new(position: Vec2, speed: f32, fraction: f32) -> Self {
     Self {
       position,
       target_position: None,
       velocity: Vec2::ZERO,
+      impulses: vec![],
       rotation: 0.,
+      fraction,
       speed,
     }
   }
 
-  pub fn add_velocity(mut self, velocity: Vec2) -> Self {
+  pub fn with_velocity(mut self, velocity: Vec2) -> Self {
     self.velocity = velocity * self.speed;
     self
+  }
+
+  pub fn add_impuls(&mut self, implus: Vec2) {
+    self.impulses.push(implus);
   }
 
   pub fn set_moving_to(&mut self, target_position: Vec2) {
@@ -55,6 +64,15 @@ impl Movable {
   }
 
   pub fn update(&mut self, delta_t: f32) {
-    self.position += self.velocity * delta_t;
+     self.impulses = self.impulses
+      .iter_mut()
+      .filter_map(|v| {
+        let new_v = *v * self.fraction;
+        if new_v.length_squared() > EPSILON { Some(new_v) } else { None }
+      })
+      .collect();
+    let implus_v =  self.impulses.iter()
+      .fold(Vec2::ZERO, |acc, i| acc + *i);
+    self.position += (self.velocity + implus_v) * delta_t;
   }
 }

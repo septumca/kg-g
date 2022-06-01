@@ -35,6 +35,27 @@ impl Renderer {
 
     if self.debug {
       Renderer::draw_cd_data(&actor.bound_rect);
+      draw_text(
+        format!("velocity: {:?}", actor.movable.velocity).as_str(),
+        actor.movable.position.x - 32.,
+        actor.movable.position.y - 20.0,
+        14.,
+        WHITE
+      );
+      draw_text(
+        format!("position: {:?}", actor.movable.position).as_str(),
+        actor.movable.position.x - 32.,
+        actor.movable.position.y - 30.0,
+        14.,
+        WHITE
+      );
+      draw_text(
+        format!("impuls: {}/{:?}", actor.movable.impulses.len(), actor.movable.impulses).as_str(),
+        actor.movable.position.x - 32.,
+        actor.movable.position.y - 40.0,
+        14.,
+        WHITE
+      );
     }
   }
 
