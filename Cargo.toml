@@ -13,3 +13,7 @@ runner = "wasm-server-runner"
 
 [profile.dev.package.'*']
 opt-level = 3
+
+[profile.release]
+opt-level = 'z'
+lto = "thin"

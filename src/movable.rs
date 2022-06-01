@@ -22,6 +22,11 @@ impl Movable {
     }
   }
 
+  pub fn add_velocity(mut self, velocity: Vec2) -> Self {
+    self.velocity = velocity * self.speed;
+    self
+  }
+
   pub fn set_moving_to(&mut self, target_position: Vec2) {
     self.rotation = if self.position.x > target_position.x { 1. } else { 0. };
     self.velocity = (target_position - self.position).normalize() * self.speed;

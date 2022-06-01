@@ -1,5 +1,4 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
-
 use macroquad::{prelude::*};
 
 use crate::{animation::Animation, movable::Movable, cd::BoundRect};
@@ -32,6 +31,7 @@ pub struct Actor {
   pub animation: Animation,
   pub movable: Movable,
   pub bound_rect: BoundRect,
+  pub is_alive: bool,
 }
 
 impl Actor {
@@ -41,6 +41,7 @@ impl Actor {
       animation: get_idle_animation(),
       movable: Movable::new(position.clone(), speed),
       bound_rect: BoundRect::new(position, 24., 32.),
+      is_alive: true,
     }
   }
 

@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use crate::{actor::Actor, cd::BoundRect};
+use crate::{actor::Actor, cd::BoundRect, projectile::Projectile};
 
 pub struct Renderer {
   pub debug: bool
@@ -38,8 +38,23 @@ impl Renderer {
     }
   }
 
-  pub fn draw_projectile() {
-    todo!()
+  pub fn draw_projectile(&self, texture: &Texture2D, projectile: &Projectile) {
+    draw_texture_ex(
+      *texture,
+      projectile.movable.position.x - 16.,
+      projectile.movable.position.y - 16.,
+      WHITE,
+      DrawTextureParams {
+          dest_size: Some(vec2(32., 32.)),
+          source: Some(projectile.get_source()),
+          flip_x: projectile.movable.rotation == 1.,
+          ..Default::default()
+      },
+    );
+
+    if self.debug {
+      Renderer::draw_cd_data(&projectile.bound_rect);
+    }
   }
 
 }
