@@ -47,7 +47,7 @@ async fn main() {
     Color::from_rgba(255, 255, 255, 255),
 );
 
-  let renderer = Renderer { debug: true };
+  let mut renderer = Renderer { debug: false };
   let image = load_texture("frames.png").await.expect("frames.png should be loaded").get_texture_data();
   let texture_actor = customize_image(image.sub_image(Rect::new(0., 0., 16. * 3., 16.)), colors_actor);
   let texture_enemy = customize_image(image.sub_image(Rect::new(16. * 3., 0., 16. * 3., 16.)), colors_enemy);
@@ -56,15 +56,15 @@ async fn main() {
   let player_actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), 100.);
   let mut player = Player::new(player_actor, 2.);
 
-  let mut ai_controllers: Vec<Ai> = vec![];
   let mut ai_actors: HashMap<usize, Actor> = HashMap::new();
+  let mut ai_controllers: HashMap<usize, Ai> = HashMap::new();
   for c in 0..ENEMIES_COUNT {
     let x_mod = (c % 12) as f32;
     let y_mod = (c / 12) as f32;
     let actor = Actor::new(Vec2::new(32. + x_mod * 64., 32. + y_mod * 64.), 80.);
-    let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 30]), actor.get_id());
+    let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 30]));
+    ai_controllers.insert(actor.get_id(), ai);
     ai_actors.insert(actor.get_id(), actor);
-    ai_controllers.push(ai);
   }
 
   let mut projectiles: Vec<Projectile> = vec![];
@@ -74,14 +74,17 @@ async fn main() {
     let delta_t = get_frame_time();
     let mut ai_actor_ids_to_remove: Vec<usize> = vec![];
 
+    if is_key_down(KeyCode::D) {
+      renderer.debug = !renderer.debug;
+    }
     if is_mouse_button_released(MouseButton::Left) {
       player.actor.move_to_and_animate(Vec2::from(mouse_position()));
     }
 
-    for ai in &mut ai_controllers {
-      if let Some(actor) = ai_actors.get_mut(&ai.actor_id) {
-        ai.update(delta_t, actor, &player.actor);
-      };
+    for (id, ai) in &mut ai_controllers.iter_mut() {
+      if let Some(mut actor) = ai_actors.get_mut(id) {
+        ai.update(delta_t, &mut actor, &player.actor);
+      }
     }
 
     player.update(delta_t, &mut projectiles, &ai_actors);
@@ -91,7 +94,7 @@ async fn main() {
     }
     for projectile in &mut projectiles {
       projectile.update(delta_t);
-      if let Some(collided_actor) = ai_actors.values().find(|ai| ai.bound_rect.collide_with(&projectile.bound_rect)) {
+      if let Some(collided_actor) = ai_actors.values().find(|actor| actor.bound_rect.collide_with(&projectile.bound_rect)) {
         projectile.is_alive = false;
         ai_actor_ids_to_remove.push(collided_actor.get_id());
       }
@@ -108,11 +111,10 @@ async fn main() {
 
     Renderer::draw_debug();
 
-    //TODO: do better cleanup
     projectiles = projectiles.into_iter().filter(|p| p.is_alive).collect();
     for id in ai_actor_ids_to_remove {
       ai_actors.remove(&id);
-      // ai_controllers = ai_controllers.into_iter().filter(|ac| ac.actor_id == id).collect(); this breaks things
+      ai_controllers.remove(&id);
     }
 
     next_frame().await

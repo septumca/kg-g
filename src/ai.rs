@@ -59,17 +59,15 @@ pub struct Ai {
   state: AiState,
   weighted_states: WeightedStates,
   timer: Timer,
-  pub actor_id: usize,
 }
 
 impl Ai {
-  pub fn new(weighted_states: WeightedStates, actor_id: usize) -> Self {
+  pub fn new(weighted_states: WeightedStates) -> Self {
     let timer = Timer::new(rand::gen_range::<f32>(0.5, 2.));
     Self {
       state: AiState::Idle,
       timer,
       weighted_states,
-      actor_id
     }
   }
 
