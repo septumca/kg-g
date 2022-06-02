@@ -53,7 +53,7 @@ impl World {
     let (alive, dead) = self.ai_actors
       .clone()
       .into_iter()
-      .partition(|a| a.is_alive);
+      .partition(|a| a.is_alive());
 
     self.ai_actors = alive;
     for actor in dead {
@@ -67,9 +67,8 @@ impl World {
 
     for projectile in &mut self.projectiles {
       projectile.update(delta_t);
-      if let Some(mut collided_actor) = self.ai_actors.iter_mut().find(|actor| actor.cd_bounds.collide_with(&projectile.cd_bounds)) {
-        projectile.is_alive = false;
-        collided_actor.is_alive = false;
+      if let Some(collided_actor) = self.ai_actors.iter_mut().find(|actor| actor.cd_bounds.collide_with(&projectile.cd_bounds)) {
+        projectile.apply(collided_actor);
       }
     }
 

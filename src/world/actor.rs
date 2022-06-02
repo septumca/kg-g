@@ -1,7 +1,8 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 use macroquad::{prelude::*};
 
-use crate::{animation::Animation, world::movable::Movable, cd::CdBounds};
+use crate::{animation::Animation, world::{movable::Movable, damage::Hp}, cd::CdBounds};
+
 
 static COUNTER: AtomicUsize = AtomicUsize::new(1);
 
@@ -31,17 +32,17 @@ pub struct Actor {
   pub animation: Animation,
   pub movable: Movable,
   pub cd_bounds: CdBounds,
-  pub is_alive: bool,
+  pub hp: Hp
 }
 
 impl Actor {
-  pub fn new(position: Vec2, speed: f32) -> Self {
+  pub fn new(position: Vec2, speed: f32, health: isize) -> Self {
     Self {
       id: get_id(),
       animation: get_idle_animation(),
       movable: Movable::new(position.clone(), speed, 0.8),
       cd_bounds: CdBounds::new(position, 24., 32.),
-      is_alive: true,
+      hp: Hp::new(health)
     }
   }
 
@@ -51,6 +52,10 @@ impl Actor {
 
   pub fn get_source(&self) -> Rect {
     self.animation.get_act_frame()
+  }
+
+  pub fn is_alive(&self) -> bool {
+    self.hp.is_alive()
   }
 
   pub fn move_to(&mut self, target_position: Vec2) {
@@ -86,7 +91,7 @@ mod tests {
   const SPEED: f32 = 100.;
 
   fn create() -> Actor {
-    Actor::new(Vec2::ZERO, SPEED)
+    Actor::new(Vec2::ZERO, SPEED, 2)
   }
 
   #[test]

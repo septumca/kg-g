@@ -8,7 +8,7 @@ pub struct Movable {
   pub position: Vec2,
   pub target_position: Option<Vec2>,
   pub velocity: Vec2,
-  pub impulses: Vec<Vec2>,
+  pub impuls: Vec2,
   pub fraction: f32,
   pub rotation: f32,
   speed: f32,
@@ -20,7 +20,7 @@ impl Movable {
       position,
       target_position: None,
       velocity: Vec2::ZERO,
-      impulses: vec![],
+      impuls: Vec2::ZERO,
       rotation: 0.,
       fraction,
       speed,
@@ -33,7 +33,7 @@ impl Movable {
   }
 
   pub fn add_impuls(&mut self, implus: Vec2) {
-    self.impulses.push(implus);
+    self.impuls += implus;
   }
 
   pub fn set_moving_to(&mut self, target_position: Vec2) {
@@ -64,15 +64,8 @@ impl Movable {
   }
 
   pub fn update(&mut self, delta_t: f32) {
-     self.impulses = self.impulses
-      .iter_mut()
-      .filter_map(|v| {
-        let new_v = *v * self.fraction;
-        if new_v.length_squared() > EPSILON { Some(new_v) } else { None }
-      })
-      .collect();
-    let implus_v =  self.impulses.iter()
-      .fold(Vec2::ZERO, |acc, i| acc + *i);
-    self.position += (self.velocity + implus_v) * delta_t;
+    let new_imp = self.impuls * self.fraction;
+    self.impuls = if new_imp.length_squared() > EPSILON { new_imp } else { Vec2::ZERO };
+    self.position += (self.velocity + self.impuls) * delta_t;
   }
 }

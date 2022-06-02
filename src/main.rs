@@ -16,7 +16,7 @@ mod ai;
 mod cd;
 mod player;
 
-const ENEMIES_COUNT: usize = 10;
+const ENEMIES_COUNT: usize = 5;
 
 #[macroquad::main("kg-g")]
 async fn main() {
@@ -49,14 +49,14 @@ async fn main() {
   let texture_enemy = customize_image(image.sub_image(Rect::new(16. * 3., 0., 16. * 3., 16.)), colors_enemy);
   let texture_fireball = customize_image(image.sub_image(Rect::new(16. * 6., 0., 16. * 4., 16.)), colors_fireball);
 
-  let player_actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), 100.);
+  let player_actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), 100., 2);
   let player = Player::new(player_actor, 2.);
 
   let mut ai_actors: Vec<(Actor, Ai)> = vec![];
   for c in 0..ENEMIES_COUNT {
     let x_mod = (c % 12) as f32;
     let y_mod = (c / 12) as f32;
-    let actor = Actor::new(Vec2::new(32. + x_mod * 64., 64. + y_mod * 64.), 80.);
+    let actor = Actor::new(Vec2::new(32. + x_mod * 64., 64. + y_mod * 64.), 80., 2);
     let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 30]));
     ai_actors.push((actor, ai));
   }

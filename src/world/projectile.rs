@@ -2,7 +2,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use macroquad::{prelude::*};
 
-use crate::{world::movable::Movable, animation::Animation, cd::CdBounds};
+use crate::{world::{movable::Movable, actor::Actor}, animation::Animation, cd::CdBounds};
+
 
 static COUNTER: AtomicUsize = AtomicUsize::new(1);
 
@@ -42,8 +43,11 @@ impl Projectile {
     }
   }
 
-  pub fn get_id(&self) -> usize {
-    self.id
+  pub fn apply(&mut self, actor: &mut Actor) {
+    if !actor.hp.has_been_modified_by_source(self.id) {
+      actor.hp.modify(self.id, -1);
+    }
+    self.is_alive = false;
   }
 
   pub fn get_source(&self) -> Rect {
