@@ -1,6 +1,6 @@
 use macroquad::{prelude::*};
 
-use crate::{actor::{Actor}, timer::Timer};
+use crate::{world::actor::Actor, timer::Timer};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum AiState {
@@ -80,10 +80,10 @@ impl Ai {
       let new_state = self.weighted_states.get_next_state();
       self.state = match new_state {
         AiState::Following => {
-          if actor.bound_rect.collide_with(&player_actor.bound_rect) {
+          if actor.cd_bounds.collide_with(&player_actor.cd_bounds) {
             let x = 32.0_f32.max(player_actor.movable.position.x + rand::gen_range::<f32>(-100., 100.)).min(screen_width() - 32.);
             let y = 32.0_f32.max(player_actor.movable.position.y + rand::gen_range::<f32>(-100., 100.)).min(screen_height() - 32.);
-            actor.move_to_and_animate(Vec2::new(x, y));
+            actor.move_to(Vec2::new(x, y));
             AiState::Wandering
           } else {
             new_state
@@ -91,7 +91,7 @@ impl Ai {
         },
         AiState::Wandering => {
           let tp = Vec2::new(rand::gen_range::<f32>(32., screen_width() - 32.), rand::gen_range::<f32>(32., screen_height() - 32.));
-          actor.move_to_and_animate(tp);
+          actor.move_to(tp);
           new_state
         },
         AiState::Idle => {

@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use crate::{actor::Actor, cd::BoundRect, projectile::Projectile};
+use crate::{world::{actor::Actor, projectile::Projectile}, cd::CdBounds};
 
 pub struct Renderer {
   pub debug: bool
@@ -14,7 +14,7 @@ impl Renderer {
     draw_text(format!("screen size: {}x{}", screen_width(), screen_height()).as_str(), 4.0, 56.0, 32., WHITE);
   }
 
-  fn draw_cd_data(bounding_rect: &BoundRect) {
+  fn draw_cd_data(bounding_rect: &CdBounds) {
     let rect = bounding_rect.get_rect();
     draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::from_rgba(124, 255, 124, 124));
   }
@@ -34,7 +34,7 @@ impl Renderer {
     );
 
     if self.debug {
-      Renderer::draw_cd_data(&actor.bound_rect);
+      Renderer::draw_cd_data(&actor.cd_bounds);
       draw_text(
         format!("velocity: {:?}", actor.movable.velocity).as_str(),
         actor.movable.position.x - 32.,
@@ -74,7 +74,7 @@ impl Renderer {
     );
 
     if self.debug {
-      Renderer::draw_cd_data(&projectile.bound_rect);
+      Renderer::draw_cd_data(&projectile.cd_bounds);
     }
   }
 

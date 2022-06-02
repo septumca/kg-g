@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 use macroquad::{prelude::*};
 
-use crate::{animation::Animation, movable::Movable, cd::BoundRect};
+use crate::{animation::Animation, world::movable::Movable, cd::CdBounds};
 
 static COUNTER: AtomicUsize = AtomicUsize::new(1);
 
@@ -30,7 +30,7 @@ pub struct Actor {
   id: usize,
   pub animation: Animation,
   pub movable: Movable,
-  pub bound_rect: BoundRect,
+  pub cd_bounds: CdBounds,
   pub is_alive: bool,
 }
 
@@ -40,7 +40,7 @@ impl Actor {
       id: get_id(),
       animation: get_idle_animation(),
       movable: Movable::new(position.clone(), speed, 0.8),
-      bound_rect: BoundRect::new(position, 24., 32.),
+      cd_bounds: CdBounds::new(position, 24., 32.),
       is_alive: true,
     }
   }
@@ -54,11 +54,9 @@ impl Actor {
   }
 
   pub fn move_to(&mut self, target_position: Vec2) {
-    self.movable.set_moving_to(target_position);
-  }
-
-  pub fn move_to_and_animate(&mut self, target_position: Vec2) {
-    self.animation = get_walking_animation();
+    if !self.movable.is_moving() {
+      self.animation = get_walking_animation();
+    }
     self.movable.set_moving_to(target_position);
   }
 
@@ -70,7 +68,7 @@ impl Actor {
   pub fn update(&mut self, delta_t: f32) {
     self.animation.update(delta_t);
     self.movable.update(delta_t);
-    self.bound_rect.update_position(&self.movable.position);
+    self.cd_bounds.update_position(&self.movable.position);
 
     if self.movable.is_moving() {
       if self.movable.has_reached_target_position() {

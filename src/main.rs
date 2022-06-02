@@ -1,26 +1,22 @@
-use std::collections::{HashMap};
-
-use actor::{Actor};
 use ai::{WeightedStates, Ai};
 use display::Renderer;
 use macroquad::prelude::*;
 use player::Player;
-use projectile::Projectile;
+use world::{actor::Actor, world::World};
 use utils::{customize_image, ReplaceColors};
 
 
 mod animation;
-mod actor;
+mod world;
 mod display;
 mod utils;
 mod timer;
 mod ai;
-mod movable;
-mod projectile;
+
 mod cd;
 mod player;
 
-const ENEMIES_COUNT: usize = 24;
+const ENEMIES_COUNT: usize = 10;
 
 #[macroquad::main("kg-g")]
 async fn main() {
@@ -54,81 +50,52 @@ async fn main() {
   let texture_fireball = customize_image(image.sub_image(Rect::new(16. * 6., 0., 16. * 4., 16.)), colors_fireball);
 
   let player_actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), 100.);
-  let mut player = Player::new(player_actor, 2.);
+  let player = Player::new(player_actor, 2.);
 
-  let mut ai_actors: HashMap<usize, Actor> = HashMap::new();
-  let mut ai_controllers: HashMap<usize, Ai> = HashMap::new();
+  let mut ai_actors: Vec<(Actor, Ai)> = vec![];
   for c in 0..ENEMIES_COUNT {
     let x_mod = (c % 12) as f32;
     let y_mod = (c / 12) as f32;
     let actor = Actor::new(Vec2::new(32. + x_mod * 64., 64. + y_mod * 64.), 80.);
     let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 30]));
-    ai_controllers.insert(actor.get_id(), ai);
-    ai_actors.insert(actor.get_id(), actor);
+    ai_actors.push((actor, ai));
   }
 
-  let mut projectiles: Vec<Projectile> = vec![];
-  loop {
-    clear_background(DARKGRAY);
-    let delta_t = get_frame_time();
-    let mut ai_actor_ids_to_remove: Vec<usize> = vec![];
+  let mut paused = false;
+  let mut world = World::new(player).with_ai_actors(ai_actors);
 
-    if is_key_down(KeyCode::D) {
+  loop {
+    if is_key_pressed(KeyCode::D) {
       renderer.debug = !renderer.debug;
     }
-    if is_mouse_button_released(MouseButton::Left) {
-      player.actor.move_to_and_animate(Vec2::from(mouse_position()));
+
+    if is_key_pressed(KeyCode::P) {
+      paused = !paused;
     }
 
-    for (id, ai) in &mut ai_controllers.iter_mut() {
-      if let Some(mut actor) = ai_actors.get_mut(id) {
-        ai.update(delta_t, &mut actor, &player.actor);
+    clear_background(DARKGRAY);
+
+    if !paused {
+      let delta_t = get_frame_time();
+      if is_mouse_button_down(MouseButton::Left) {
+        world.on_mouse_button_down(Vec2::from(mouse_position()));
       }
+
+      world.update(delta_t);
     }
 
-    player.update(delta_t, &mut projectiles, &ai_actors);
-    player.actor.update(delta_t);
-
-    let mut impulses: Vec<(usize, Vec2)> = vec![];
-    for actor_a in ai_actors.values() {
-      for actor_b in ai_actors.values() {
-        if actor_a.get_id() != actor_b.get_id() && actor_a.bound_rect.collide_with(&actor_b.bound_rect) {
-          let impuls = (actor_a.movable.position - actor_b.movable.position).normalize() * 120.;
-          impulses.push((actor_a.get_id(), impuls));
-        }
-      }
+    renderer.draw_actor(&texture_actor, &world.get_player().actor);
+    for actor in world.get_ai_actors() {
+      renderer.draw_actor(&texture_enemy, actor);
     }
-    for (id, impuls) in impulses {
-      if let Some(actor) = ai_actors.get_mut(&id) {
-        actor.movable.add_impuls(impuls);
-      }
-    }
-    for actor in ai_actors.values_mut() {
-      actor.update(delta_t);
-    }
-
-    for projectile in &mut projectiles {
-      projectile.update(delta_t);
-      if let Some(collided_actor) = ai_actors.values().find(|actor| actor.bound_rect.collide_with(&projectile.bound_rect)) {
-        projectile.is_alive = false;
-        ai_actor_ids_to_remove.push(collided_actor.get_id());
-      }
-    }
-
-    renderer.draw_actor(&texture_actor, &player.actor);
-    for actor in ai_actors.values() {
-      renderer.draw_actor(&texture_enemy, &actor);
-    }
-    for projectile in &projectiles {
+    for projectile in world.get_projectiles() {
       renderer.draw_projectile(&texture_fireball, projectile);
     }
 
     Renderer::draw_debug();
 
-    projectiles = projectiles.into_iter().filter(|p| p.is_alive).collect();
-    for id in ai_actor_ids_to_remove {
-      ai_actors.remove(&id);
-      ai_controllers.remove(&id);
+    if paused {
+      draw_text("PAUSED", screen_width() / 2. - 40., screen_height() / 2. - 4., 32., WHITE);
     }
 
     next_frame().await

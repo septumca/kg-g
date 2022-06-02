@@ -1,7 +1,14 @@
+use std::sync::atomic::{AtomicUsize, Ordering};
+
 use macroquad::{prelude::*};
 
-use crate::{movable::Movable, animation::Animation, cd::BoundRect};
+use crate::{world::movable::Movable, animation::Animation, cd::CdBounds};
 
+static COUNTER: AtomicUsize = AtomicUsize::new(1);
+
+fn get_id() -> usize {
+  COUNTER.fetch_add(1, Ordering::Relaxed)
+}
 
 fn get_flying_animation() -> Animation {
   Animation::new(
@@ -15,21 +22,28 @@ fn get_flying_animation() -> Animation {
   )
 }
 
+#[derive(Debug, Clone)]
 pub struct Projectile {
+  id: usize,
   pub movable: Movable,
   pub animation: Animation,
-  pub bound_rect: BoundRect,
+  pub cd_bounds: CdBounds,
   pub is_alive: bool,
 }
 
 impl Projectile {
   pub fn new(position: Vec2, velocity: Vec2) -> Self {
     Self {
+      id: get_id(),
       movable: Movable::new(position, 150., 1.).with_velocity(velocity),
       animation: get_flying_animation(),
-      bound_rect: BoundRect::new(position, 16., 16.),
+      cd_bounds: CdBounds::new(position, 16., 16.),
       is_alive: true,
     }
+  }
+
+  pub fn get_id(&self) -> usize {
+    self.id
   }
 
   pub fn get_source(&self) -> Rect {
@@ -39,7 +53,7 @@ impl Projectile {
   pub fn update(&mut self, delta_t: f32) {
     self.animation.update(delta_t);
     self.movable.update(delta_t);
-    self.bound_rect.update_position(&self.movable.position);
+    self.cd_bounds.update_position(&self.movable.position);
   }
 }
 

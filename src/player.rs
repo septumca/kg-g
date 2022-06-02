@@ -1,8 +1,6 @@
-use std::collections::{HashMap};
-
 use macroquad::{prelude::*};
 
-use crate::{actor::Actor, timer::Timer, projectile::{Projectile, spawn_projectile_from_actor}};
+use crate::{world::{actor::Actor, projectile::{Projectile, spawn_projectile_from_actor}}, timer::Timer};
 
 pub struct Player {
   pub actor: Actor,
@@ -18,11 +16,11 @@ impl Player {
     }
   }
 
-  pub fn update(&mut self, delta_t: f32, projectiles: &mut Vec<Projectile>, enemies: &HashMap<usize, Actor>) {
+  pub fn update(&mut self, delta_t: f32, projectiles: &mut Vec<Projectile>, enemies: &Vec<Actor>) {
     if self.projectile_timer.update(delta_t) {
       let player_position = &self.actor.movable.position;
 
-      if let Some(closest) = enemies.values().min_by(|e_a, e_b| {
+      if let Some(closest) = enemies.iter().min_by(|e_a, e_b| {
         let d_a = player_position.distance_squared(e_a.movable.position);
         let d_b = player_position.distance_squared(e_b.movable.position);
 
