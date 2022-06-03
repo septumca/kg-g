@@ -38,9 +38,9 @@ async fn main() {
 
   let colors_fireball = ReplaceColors::new(
     Color::from_rgba(226, 88, 34, 255),
-    Color::from_rgba(226, 184, 34, 255),
-    Color::from_rgba(34, 124, 226, 255),
-    Color::from_rgba(255, 255, 255, 255),
+    Color::from_rgba(226, 108, 34, 255),
+    Color::from_rgba(226, 188, 134, 255),
+    Color::from_rgba(226, 58, 34, 255),
 );
 
   let mut renderer = Renderer { debug: false };
@@ -49,7 +49,7 @@ async fn main() {
   let texture_enemy = customize_image(image.sub_image(Rect::new(16. * 3., 0., 16. * 3., 16.)), colors_enemy);
   let texture_fireball = customize_image(image.sub_image(Rect::new(16. * 6., 0., 16. * 4., 16.)), colors_fireball);
 
-  let player_actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), 100., 2);
+  let player_actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), 100., 5);
   let player = Player::new(player_actor, 2.);
 
   let mut ai_actors: Vec<(Actor, Ai)> = vec![];
@@ -91,8 +91,11 @@ async fn main() {
     for projectile in world.get_projectiles() {
       renderer.draw_projectile(&texture_fireball, projectile);
     }
+    for particle in world.get_particles() {
+      renderer.draw_particle(&texture_fireball, particle);
+    }
 
-    Renderer::draw_debug();
+    renderer.draw_debug(&world);
 
     if paused {
       draw_text("PAUSED", screen_width() / 2. - 40., screen_height() / 2. - 4., 32., WHITE);

@@ -75,8 +75,9 @@ impl Ai {
     self.timer = Timer::new(rand::gen_range::<f32>(0.5, 2.))
   }
 
-  pub fn update(&mut self, delta_time: f32, actor: &mut Actor, player_actor: &Actor) {
-    if self.timer.update(delta_time) || actor.animation.is_finished() {
+  pub fn update(&mut self, delta_t: f32, actor: &mut Actor, player_actor: &Actor) {
+    self.timer.update(delta_t);
+    if self.timer.is_just_over() || actor.animation.is_finished() {
       let new_state = self.weighted_states.get_next_state();
       self.state = match new_state {
         AiState::Following => {

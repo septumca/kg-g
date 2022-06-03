@@ -1,6 +1,10 @@
 use macroquad::prelude::*;
 
 
+pub fn get_vector_rotation(v: &Vec2) -> f32 {
+  v.y.atan2(v.x)
+}
+
 pub struct ReplaceColors {
   armor: Color,
   detail: Color,

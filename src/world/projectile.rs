@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use macroquad::{prelude::*};
 
-use crate::{world::{movable::Movable, actor::Actor}, animation::Animation, cd::CdBounds};
+use crate::{world::{movable::Movable, actor::Actor}, animation::Animation, cd::CdBounds, timer::Timer};
 
 
 static COUNTER: AtomicUsize = AtomicUsize::new(1);
@@ -15,11 +15,8 @@ fn get_flying_animation() -> Animation {
   Animation::new(
     vec![
       Rect::new(0., 0., 16., 16.),
-      Rect::new(16., 0., 16., 16.),
-      Rect::new(32., 0., 16., 16.),
-      Rect::new(48., 0., 16., 16.),
     ],
-    true
+    false
   )
 }
 
@@ -30,6 +27,7 @@ pub struct Projectile {
   pub animation: Animation,
   pub cd_bounds: CdBounds,
   pub is_alive: bool,
+  pub particles_timer: Timer,
 }
 
 impl Projectile {
@@ -40,6 +38,7 @@ impl Projectile {
       animation: get_flying_animation(),
       cd_bounds: CdBounds::new(position, 16., 16.),
       is_alive: true,
+      particles_timer: Timer::new(0.05)
     }
   }
 
@@ -57,6 +56,7 @@ impl Projectile {
   pub fn update(&mut self, delta_t: f32) {
     self.animation.update(delta_t);
     self.movable.update(delta_t);
+    self.particles_timer.update(delta_t);
     self.cd_bounds.update_position(&self.movable.position);
   }
 }

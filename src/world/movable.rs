@@ -1,6 +1,8 @@
 
 use macroquad::{prelude::*};
 
+use crate::utils::get_vector_rotation;
+
 const EPSILON: f32 = 0.004;
 
 #[derive(Debug, Clone)]
@@ -29,6 +31,7 @@ impl Movable {
 
   pub fn with_velocity(mut self, velocity: Vec2) -> Self {
     self.velocity = velocity * self.speed;
+    self.rotation = get_vector_rotation(&velocity);
     self
   }
 
@@ -37,8 +40,8 @@ impl Movable {
   }
 
   pub fn set_moving_to(&mut self, target_position: Vec2) {
-    self.rotation = if self.position.x > target_position.x { 1. } else { 0. };
     self.velocity = (target_position - self.position).normalize() * self.speed;
+    self.rotation = get_vector_rotation(&self.velocity);
     self.target_position = Some(target_position);
   }
 

@@ -4,13 +4,14 @@ use macroquad::{prelude::*};
 
 use crate::{ai::Ai, player::Player};
 
-use super::{projectile::Projectile, actor::Actor};
+use super::{projectile::Projectile, actor::Actor, particle::{ParticleSystem, Particle}};
 
 pub struct World {
   player: Player,
   ai_actors: Vec<Actor>,
   ai_controllers: HashMap<usize, Ai>,
   projectiles: Vec<Projectile>,
+  pub particle_system: ParticleSystem,
 }
 
 impl World {
@@ -20,6 +21,7 @@ impl World {
       ai_actors: vec![],
       ai_controllers: HashMap::new(),
       projectiles: vec![],
+      particle_system: ParticleSystem::new(),
     }
   }
 
@@ -48,6 +50,10 @@ impl World {
     &self.projectiles
   }
 
+  pub fn get_particles(&self) -> &Vec<Particle> {
+    &self.particle_system.particles
+  }
+
   fn cleanup(&mut self) {
     self.projectiles = self.projectiles.clone().into_iter().filter(|p| p.is_alive).collect();
     let (alive, dead) = self.ai_actors
@@ -65,8 +71,18 @@ impl World {
     self.player.update(delta_t, &mut self.projectiles, &self.ai_actors);
     self.player.actor.update(delta_t);
 
+    self.particle_system.update(delta_t);
+
     for projectile in &mut self.projectiles {
       projectile.update(delta_t);
+      if projectile.particles_timer.is_just_over() {
+        let frames = vec![
+          Rect::new(16., 0., 16., 16.),
+          Rect::new(32., 0., 16., 16.),
+          Rect::new(48., 0., 16., 16.),
+        ];
+        self.particle_system.add_particle(Particle::new(projectile.movable.position, Vec2::ZERO, frames, 0.3))
+      }
       if let Some(collided_actor) = self.ai_actors.iter_mut().find(|actor| actor.cd_bounds.collide_with(&projectile.cd_bounds)) {
         projectile.apply(collided_actor);
       }

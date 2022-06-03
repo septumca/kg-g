@@ -56,8 +56,9 @@ impl Animation {
     self.frames.act_frame()
   }
 
-  pub fn update(&mut self, delta: f32) {
-    if self.time.update(delta) {
+  pub fn update(&mut self, delta_t: f32) {
+    self.time.update(delta_t);
+    if self.time.is_just_over() {
       self.frames.next_frame();
     }
   }

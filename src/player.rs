@@ -17,7 +17,8 @@ impl Player {
   }
 
   pub fn update(&mut self, delta_t: f32, projectiles: &mut Vec<Projectile>, enemies: &Vec<Actor>) {
-    if self.projectile_timer.update(delta_t) {
+    self.projectile_timer.update(delta_t);
+    if self.projectile_timer.is_just_over() {
       let player_position = &self.actor.movable.position;
 
       if let Some(closest) = enemies.iter().min_by(|e_a, e_b| {
