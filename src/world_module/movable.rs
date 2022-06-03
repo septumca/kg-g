@@ -40,6 +40,9 @@ impl Movable {
   }
 
   pub fn set_moving_to(&mut self, target_position: Vec2) {
+    if self.position == target_position {
+      return;
+    }
     self.velocity = (target_position - self.position).normalize() * self.speed;
     self.rotation = get_vector_rotation(&self.velocity);
     self.target_position = Some(target_position);

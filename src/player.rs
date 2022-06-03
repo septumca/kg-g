@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use macroquad::{prelude::*};
 
 use crate::{world_module::{actor::Actor, projectile::{Projectile, spawn_projectile_from_actor}}, systems::timer::Timer};
@@ -26,7 +28,7 @@ impl Player {
         let d_a = player_position.distance_squared(e_a.movable.position);
         let d_b = player_position.distance_squared(e_b.movable.position);
 
-        d_a.partial_cmp(&d_b).unwrap_or_else(|| panic!("{} and {} should be comparable", d_a, d_b))
+        d_a.partial_cmp(&d_b).unwrap_or_else(|| Ordering::Equal)
       }) {
         projectiles.push(spawn_projectile_from_actor(player_position, &closest.movable.position));
         self.projectile_timer.reset();
