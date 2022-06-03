@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 
 use crate::{world_module::{world::World, actor::Actor}, player::Player, systems::ai::{Ai, WeightedStates}, display::Renderer};
 
-use super::{stage_stack::Stage, resources::Resources};
+use super::{stage_stack::{Stage, StageAction}, resources::Resources};
 
 const ENEMIES_COUNT: usize = 2;
 
@@ -35,11 +35,7 @@ impl PlayingStage {
 }
 
 impl Stage for PlayingStage {
-  fn get_id(&self) -> usize {
-    1
-  }
-
-  fn update(&mut self, _resources: &Resources) -> Option<usize> {
+  fn update(&mut self, _resources: &Resources) -> Option<StageAction> {
     if is_key_pressed(KeyCode::D) {
       self.renderer.debug = !self.renderer.debug;
     }
@@ -49,7 +45,7 @@ impl Stage for PlayingStage {
     }
 
     if is_key_pressed(KeyCode::Escape) {
-      return Some(2);
+      return Some(StageAction::EndGame);
     }
 
     if !self.paused {

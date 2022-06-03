@@ -22,6 +22,10 @@ async fn main() {
   let mut stage_stack = StageStack::new().with_stages(vec![Box::new(mainmenu_stage), Box::new(playing_stage)]);
 
   loop {
+    if stage_stack.is_empty() {
+      break;
+    }
+
     stage_stack.update(&resources);
     stage_stack.draw(&resources);
 

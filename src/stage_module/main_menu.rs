@@ -1,23 +1,17 @@
-use std::process;
-
 use macroquad::{prelude::*, ui::root_ui};
 
-use super::stage_stack::Stage;
+use super::stage_stack::{Stage, StageAction};
 
 pub struct MainMenu {}
 
 impl Stage for MainMenu {
-  fn get_id(&self) -> usize {
-    2
-  }
-
-  fn update(&mut self, _resources: &super::resources::Resources) -> Option<usize> {
+  fn update(&mut self, _resources: &super::resources::Resources) -> Option<StageAction> {
     if root_ui().button(Some(Vec2::new(screen_width() / 2. - 24., screen_height() / 2. - 50.)), "Start") {
-      return Some(1);
+      return Some(StageAction::StartGame);
     }
 
     if root_ui().button(Some(Vec2::new(screen_width() / 2. - 20., screen_height() / 2. + 50.)), "Quit") {
-      process::exit(0);
+      return Some(StageAction::GameQuit);
     }
 
     None
