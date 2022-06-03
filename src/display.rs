@@ -107,11 +107,11 @@ impl Renderer {
   pub fn draw_particle(&self, texture: &Texture2D, particle: &Particle) {
     draw_texture_ex(
       *texture,
-      particle.movable.position.x - 16.,
-      particle.movable.position.y - 16.,
+      particle.movable.position.x - 24.,
+      particle.movable.position.y - 24.,
       WHITE,
       DrawTextureParams {
-          dest_size: Some(vec2(32., 32.)),
+          dest_size: Some(vec2(48., 48.)),
           source: Some(particle.animation.get_act_frame()),
           rotation: particle.movable.rotation,
           ..Default::default()

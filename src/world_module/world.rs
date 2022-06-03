@@ -12,6 +12,7 @@ pub struct World {
   ai_controllers: HashMap<usize, Ai>,
   projectiles: Vec<Projectile>,
   pub particle_system: ParticleSystem,
+  bounds: Rect,
 }
 
 impl World {
@@ -22,6 +23,7 @@ impl World {
       ai_controllers: HashMap::new(),
       projectiles: vec![],
       particle_system: ParticleSystem::new(),
+      bounds: Rect::new(0., 0., screen_width(), screen_height())
     }
   }
 
@@ -75,6 +77,10 @@ impl World {
 
     for projectile in &mut self.projectiles {
       projectile.update(delta_t);
+      if !self.bounds.contains(projectile.movable.position) {
+        projectile.is_alive = false;
+        continue;
+      }
       if projectile.particles_timer.is_just_over() {
         let frames = vec![
           Rect::new(16., 0., 16., 16.),

@@ -23,6 +23,6 @@ impl CdBounds {
   }
 
   pub fn collide_with(&self, other: &CdBounds) -> bool {
-    self.get_rect().intersect(other.get_rect()).is_some()
+    self.get_rect().overlaps(&other.get_rect())
   }
 }
