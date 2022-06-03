@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 
-use crate::timer::Timer;
+use super::timer::Timer;
+
 
 
 const ANIMATION_THRESHOLD: f32 = 0.07;

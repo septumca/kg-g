@@ -1,6 +1,6 @@
 use macroquad::{prelude::*};
 
-use crate::{world_module::{actor::Actor, projectile::{Projectile, spawn_projectile_from_actor}}, timer::Timer};
+use crate::{world_module::{actor::Actor, projectile::{Projectile, spawn_projectile_from_actor}}, systems::timer::Timer};
 
 pub struct Player {
   pub actor: Actor,

@@ -1,6 +1,9 @@
 use macroquad::{prelude::*};
 
-use crate::{world_module::actor::Actor, timer::Timer};
+use crate::world_module::actor::Actor;
+
+use super::timer::Timer;
+
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum AiState {

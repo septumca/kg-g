@@ -1,8 +1,9 @@
 use macroquad::prelude::*;
 
-use crate::{timer::Timer, animation::Animation};
+use crate::systems::{animation::Animation, timer::Timer};
 
 use super::movable::Movable;
+
 
 
 #[derive(Debug, Clone)]

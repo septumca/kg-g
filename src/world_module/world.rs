@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use macroquad::{prelude::*, rand::ChooseRandom};
 
-use crate::{ai::{Ai, WeightedStates}, player::Player, timer::Timer};
+
+use crate::{player::Player, systems::{ai::{Ai, WeightedStates}, timer::Timer}};
 
 use super::{projectile::Projectile, actor::Actor, particle::{ParticleSystem, Particle}};
 
