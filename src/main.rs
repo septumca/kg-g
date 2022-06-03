@@ -16,7 +16,7 @@ mod ai;
 mod cd;
 mod player;
 
-const ENEMIES_COUNT: usize = 5;
+const ENEMIES_COUNT: usize = 2;
 
 #[macroquad::main("kg-g")]
 async fn main() {

@@ -18,6 +18,11 @@ impl Timer {
     Self { act: 0., threshold, repeat: false, just_over: false }
   }
 
+  pub fn reset(&mut self) {
+    self.act = 0.;
+    self.just_over = false;
+  }
+
   pub fn is_over(&self) -> bool {
     self.act > self.threshold
   }

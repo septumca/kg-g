@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use macroquad::{prelude::*};
+use macroquad::{prelude::*, rand::ChooseRandom};
 
-use crate::{ai::Ai, player::Player};
+use crate::{ai::{Ai, WeightedStates}, player::Player, timer::Timer};
 
 use super::{projectile::Projectile, actor::Actor, particle::{ParticleSystem, Particle}};
 
@@ -13,6 +13,7 @@ pub struct World {
   projectiles: Vec<Projectile>,
   pub particle_system: ParticleSystem,
   bounds: Rect,
+  spawn_timer: Timer,
 }
 
 impl World {
@@ -23,7 +24,8 @@ impl World {
       ai_controllers: HashMap::new(),
       projectiles: vec![],
       particle_system: ParticleSystem::new(),
-      bounds: Rect::new(0., 0., screen_width(), screen_height())
+      bounds: Rect::new(0., 0., screen_width(), screen_height()),
+      spawn_timer: Timer::new(4.),
     }
   }
 
@@ -108,6 +110,22 @@ impl World {
       }
       if let Some(imp) = impuls {
         actor_a.movable.add_impuls(imp);
+      }
+    }
+
+    self.spawn_timer.update(delta_t);
+    if self.spawn_timer.is_just_over() {
+      if let Some(pos) = vec![
+        Vec2::new(self.bounds.left(), rand::gen_range::<f32>(self.bounds.top(), self.bounds.bottom())),
+        Vec2::new(self.bounds.right(), rand::gen_range::<f32>(self.bounds.top(), self.bounds.bottom())),
+        Vec2::new(rand::gen_range::<f32>(self.bounds.left(), self.bounds.right()), self.bounds.top()),
+        Vec2::new(rand::gen_range::<f32>(self.bounds.left(), self.bounds.right()), self.bounds.bottom()),
+      ].choose() {
+        let actor = Actor::new(*pos, 80., 2);
+        let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 30]));
+
+        self.ai_controllers.insert(actor.get_id(), ai);
+        self.ai_actors.push(actor);
       }
     }
 

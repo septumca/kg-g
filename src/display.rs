@@ -12,12 +12,17 @@ impl Renderer {
 
   pub fn draw_debug(&self, world: &World) {
     if self.debug {
+      let font_size: f32 = 16.;
+      let o_x: f32 = 4.;
+      let o_y: f32 = 12.;
       let fps = get_fps();
-      draw_text(format!("fps: {}", fps).as_str(), 4.0, 24.0, 32., WHITE);
-      draw_text(format!("screen size: {}x{}", screen_width(), screen_height()).as_str(), 4.0, 56.0, 32., WHITE);
-      draw_text(format!("ai actors count: {}", world.get_ai_actors().len()).as_str(), 4.0, 88.0, 32., WHITE);
-      draw_text(format!("projecties count: {}", world.get_projectiles().len()).as_str(), 4.0, 120.0, 32., WHITE);
-      draw_text(format!("particles count: {}", world.get_particles().len()).as_str(), 4.0, 152.0, 32., WHITE);
+
+      draw_text(format!("fps: {}", fps).as_str(), o_x, o_y, font_size, WHITE);
+      draw_text(format!("screen size: {}x{}", screen_width(), screen_height()).as_str(), o_x, o_y + font_size, font_size, WHITE);
+      draw_text(format!("ai actors count: {}", world.get_ai_actors().len()).as_str(), o_x, o_y + font_size * 2., font_size, WHITE);
+      draw_text(format!("projecties count: {}", world.get_projectiles().len()).as_str(), o_x, o_y + font_size * 3., font_size, WHITE);
+      draw_text(format!("particles count: {}", world.get_particles().len()).as_str(), o_x, o_y + font_size * 4., font_size, WHITE);
+      draw_text(format!("fire ready: {}", world.get_player().projectile_timer.is_over()).as_str(), o_x, o_y + font_size * 5., font_size, WHITE);
     }
   }
 
