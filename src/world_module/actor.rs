@@ -41,7 +41,7 @@ impl Actor {
       id: get_id(),
       animation: get_idle_animation(),
       movable: Movable::new(position, speed, 0.8),
-      cd_bounds: CdBounds::new(position, 24., 32.),
+      cd_bounds: CdBounds::new(position, 20., 30.),
       hp: Hp::new(health)
     }
   }
