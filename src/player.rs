@@ -1,6 +1,6 @@
 use macroquad::{prelude::*};
 
-use crate::{world::{actor::Actor, projectile::{Projectile, spawn_projectile_from_actor}}, timer::Timer};
+use crate::{world_module::{actor::Actor, projectile::{Projectile, spawn_projectile_from_actor}}, timer::Timer};
 
 pub struct Player {
   pub actor: Actor,
@@ -16,7 +16,7 @@ impl Player {
     }
   }
 
-  pub fn update(&mut self, delta_t: f32, projectiles: &mut Vec<Projectile>, enemies: &Vec<Actor>) {
+  pub fn update(&mut self, delta_t: f32, projectiles: &mut Vec<Projectile>, enemies: &[Actor]) {
     self.projectile_timer.update(delta_t);
     if self.projectile_timer.is_just_over() {
       let player_position = &self.actor.movable.position;
@@ -25,7 +25,7 @@ impl Player {
         let d_a = player_position.distance_squared(e_a.movable.position);
         let d_b = player_position.distance_squared(e_b.movable.position);
 
-        d_a.partial_cmp(&d_b).expect(format!("{} and {} should be comparable", d_a, d_b).as_str())
+        d_a.partial_cmp(&d_b).unwrap_or_else(|| panic!("{} and {} should be comparable", d_a, d_b))
       }) {
         projectiles.push(spawn_projectile_from_actor(player_position, &closest.movable.position));
       }

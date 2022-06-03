@@ -63,7 +63,7 @@ impl Movable {
     if let Some(tp) = self.target_position {
       return self.position.distance_squared(tp) < 10.0;
     }
-    return false;
+    false
   }
 
   pub fn update(&mut self, delta_t: f32) {

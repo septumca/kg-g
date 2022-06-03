@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use macroquad::prelude::*;
 
-use crate::{world::{actor::Actor, projectile::Projectile, movable::Movable, particle::Particle, world::World}, cd::CdBounds};
+use crate::{world_module::{actor::Actor, projectile::Projectile, movable::Movable, particle::Particle, world::World}, cd::CdBounds};
 
 pub struct Renderer {
   pub debug: bool

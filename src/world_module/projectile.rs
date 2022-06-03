@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use macroquad::{prelude::*};
 
-use crate::{world::{movable::Movable, actor::Actor}, animation::Animation, cd::CdBounds, timer::Timer};
+use crate::{world_module::{movable::Movable, actor::Actor}, animation::Animation, cd::CdBounds, timer::Timer};
 
 
 static COUNTER: AtomicUsize = AtomicUsize::new(1);

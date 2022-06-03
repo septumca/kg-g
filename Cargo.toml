@@ -5,11 +5,12 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+#build --target wasm32-unknown-unknown
+
 [dependencies]
 macroquad = "0.3.16"
 
-[target.wasm32-unknown-unknown]
-runner = "wasm-server-runner"
+#cargo build --target wasm32-unknown-unknown
 
 [profile.dev.package.'*']
 opt-level = 3

@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 use macroquad::{prelude::*};
 
-use crate::{animation::Animation, world::{movable::Movable, damage::Hp}, cd::CdBounds};
+use crate::{animation::Animation, world_module::{movable::Movable, damage::Hp}, cd::CdBounds};
 
 
 static COUNTER: AtomicUsize = AtomicUsize::new(1);
@@ -40,7 +40,7 @@ impl Actor {
     Self {
       id: get_id(),
       animation: get_idle_animation(),
-      movable: Movable::new(position.clone(), speed, 0.8),
+      movable: Movable::new(position, speed, 0.8),
       cd_bounds: CdBounds::new(position, 24., 32.),
       hp: Hp::new(health)
     }
@@ -75,11 +75,9 @@ impl Actor {
     self.movable.update(delta_t);
     self.cd_bounds.update_position(&self.movable.position);
 
-    if self.movable.is_moving() {
-      if self.movable.has_reached_target_position() {
-        self.movable.set_to_target_position();
-        self.stop();
-      }
+    if self.movable.is_moving() && self.movable.has_reached_target_position() {
+      self.movable.set_to_target_position();
+      self.stop();
     }
   }
 }

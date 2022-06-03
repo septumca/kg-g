@@ -1,6 +1,6 @@
 use macroquad::{prelude::*};
 
-use crate::{world::actor::Actor, timer::Timer};
+use crate::{world_module::actor::Actor, timer::Timer};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum AiState {
@@ -16,8 +16,8 @@ pub struct WeightedStates {
   total: i32,
 }
 
-fn get_total_weight(states: &Vec<(i32, AiState)>) -> i32 {
-  states.into_iter().fold(0, |acc, (w, _)| acc + w)
+fn get_total_weight(states: &[(i32, AiState)]) -> i32 {
+  states.iter().fold(0, |acc, (w, _)| acc + w)
 }
 
 impl WeightedStates {
@@ -103,12 +103,9 @@ impl Ai {
       self.refresh_timer();
     };
 
-    match self.state {
-      AiState::Following => {
-        let tp = Vec2::new(player_actor.movable.position.x, player_actor.movable.position.y);
-        actor.move_to(tp);
-      }
-      _ => (),
-    };
+    if self.state == AiState::Following  {
+      let tp = Vec2::new(player_actor.movable.position.x, player_actor.movable.position.y);
+      actor.move_to(tp);
+    }
   }
 }

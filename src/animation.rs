@@ -49,7 +49,7 @@ impl Animation {
   }
 
   pub fn is_finished(&self) -> bool {
-    return !self.frames.should_loop && self.frames.act == self.frames.list.len() - 1
+    !self.frames.should_loop && self.frames.act == self.frames.list.len() - 1
   }
 
   pub fn get_act_frame(&self) -> Rect {

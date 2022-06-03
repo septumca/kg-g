@@ -2,12 +2,12 @@ use ai::{WeightedStates, Ai};
 use display::Renderer;
 use macroquad::prelude::*;
 use player::Player;
-use world::{actor::Actor, world::World};
+use world_module::{actor::Actor, world::World};
 use utils::{customize_image, ReplaceColors};
 
 
 mod animation;
-mod world;
+mod world_module;
 mod display;
 mod utils;
 mod timer;
