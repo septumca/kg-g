@@ -15,7 +15,7 @@ pub struct PlayingStage {
 impl PlayingStage {
   pub fn new() -> Self {
     let player_actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), 100., 5);
-    let player = Player::new(player_actor, 2.);
+    let player = Player::new(player_actor, 1.);
 
     let mut ai_actors: Vec<(Actor, Ai)> = vec![];
     for c in 0..ENEMIES_COUNT {
@@ -45,6 +45,10 @@ impl Stage for PlayingStage {
     }
 
     if is_key_pressed(KeyCode::Escape) {
+      return Some(StageAction::EndGame);
+    }
+
+    if !self.world.player.actor.is_alive() {
       return Some(StageAction::EndGame);
     }
 
@@ -78,6 +82,7 @@ impl Stage for PlayingStage {
       self.renderer.draw_particle(&resources.texture_fireball, particle);
     }
 
+    self.renderer.draw_player_info(&self.world);
     self.renderer.draw_debug(&self.world);
   }
 }

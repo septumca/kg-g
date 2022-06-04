@@ -5,12 +5,16 @@ use macroquad::{prelude::*};
 pub struct CdBounds {
   position: Vec2,
   w: f32,
-  h: f32
+  h: f32,
 }
 
 impl CdBounds {
   pub fn new(position: Vec2, w: f32, h: f32) -> Self {
-    Self { position, w, h, }
+    Self {
+      position,
+      w,
+      h,
+    }
   }
 
   pub fn update_position(&mut self, position: &Vec2) {
@@ -23,6 +27,7 @@ impl CdBounds {
   }
 
   pub fn collide_with(&self, other: &CdBounds) -> bool {
-    self.get_rect().overlaps(&other.get_rect())
+    let act_collided = self.get_rect().overlaps(&other.get_rect());
+    act_collided
   }
 }

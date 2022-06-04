@@ -8,7 +8,7 @@ use crate::{player::Player, systems::{ai::{Ai, WeightedStates}, timer::Timer}};
 use super::{projectile::Projectile, actor::Actor, particle::{ParticleSystem, Particle}};
 
 pub struct World {
-  player: Player,
+  pub player: Player,
   ai_actors: Vec<Actor>,
   ai_controllers: HashMap<usize, Ai>,
   projectiles: Vec<Projectile>,
@@ -26,7 +26,7 @@ impl World {
       projectiles: vec![],
       particle_system: ParticleSystem::new(),
       bounds: Rect::new(0., 0., screen_width(), screen_height()),
-      spawn_timer: Timer::new(4.),
+      spawn_timer: Timer::new(0.8),
     }
   }
 
@@ -101,6 +101,11 @@ impl World {
     for actor_a in self.ai_actors.iter_mut() {
       if let Some(ai) = self.ai_controllers.get_mut(&actor_a.get_id()) {
         ai.update(delta_t, actor_a, &self.player.actor);
+
+        if actor_a.cd_bounds.collide_with(&self.player.actor.cd_bounds) {
+          ai.set_state(crate::systems::ai::AiState::Wandering, actor_a, &self.player.actor);
+          self.player.modify_hp(actor_a.get_id(), -1);
+        }
       }
       actor_a.update(delta_t);
       let mut impuls: Option<Vec2> = None;
@@ -122,8 +127,8 @@ impl World {
         Vec2::new(rand::gen_range::<f32>(self.bounds.left(), self.bounds.right()), self.bounds.top()),
         Vec2::new(rand::gen_range::<f32>(self.bounds.left(), self.bounds.right()), self.bounds.bottom()),
       ].choose() {
-        let actor = Actor::new(*pos, 80., 2);
-        let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 30]));
+        let actor = Actor::new(*pos, 75., 2);
+        let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 7]));
 
         self.ai_controllers.insert(actor.get_id(), ai);
         self.ai_actors.push(actor);

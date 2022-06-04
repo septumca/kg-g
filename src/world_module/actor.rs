@@ -1,17 +1,8 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
 use macroquad::{prelude::*};
 
-use crate::systems::{animation::Animation, cd::CdBounds};
+use crate::{systems::{animation::Animation, cd::CdBounds}, utils::generate_id};
 
 use super::{movable::Movable, damage::Hp};
-
-
-
-static COUNTER: AtomicUsize = AtomicUsize::new(1);
-
-fn get_id() -> usize {
-  COUNTER.fetch_add(1, Ordering::Relaxed)
-}
 
 fn get_idle_animation() -> Animation {
   Animation::new(vec![Rect::new(0., 0., 16., 16.)], false)
@@ -41,7 +32,7 @@ pub struct Actor {
 impl Actor {
   pub fn new(position: Vec2, speed: f32, health: isize) -> Self {
     Self {
-      id: get_id(),
+      id: generate_id(),
       animation: get_idle_animation(),
       movable: Movable::new(position, speed, 0.8),
       cd_bounds: CdBounds::new(position, 20., 30.),

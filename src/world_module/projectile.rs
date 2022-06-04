@@ -1,18 +1,7 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
-
 use macroquad::{prelude::*};
-
-use crate::systems::{animation::Animation, cd::CdBounds, timer::Timer};
-
+use crate::{systems::{animation::Animation, cd::CdBounds, timer::Timer}, utils::generate_id};
 use super::{movable::Movable, actor::Actor};
 
-
-
-static COUNTER: AtomicUsize = AtomicUsize::new(1);
-
-fn get_id() -> usize {
-  COUNTER.fetch_add(1, Ordering::Relaxed)
-}
 
 fn get_flying_animation() -> Animation {
   Animation::new(
@@ -36,7 +25,7 @@ pub struct Projectile {
 impl Projectile {
   pub fn new(position: Vec2, velocity: Vec2) -> Self {
     Self {
-      id: get_id(),
+      id: generate_id(),
       movable: Movable::new(position, 150., 1.).with_velocity(velocity),
       animation: get_flying_animation(),
       cd_bounds: CdBounds::new(position, 16., 16.),

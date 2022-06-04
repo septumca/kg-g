@@ -78,37 +78,28 @@ impl Ai {
     self.timer = Timer::new(rand::gen_range::<f32>(0.5, 2.))
   }
 
-  pub fn update(&mut self, delta_t: f32, actor: &mut Actor, player_actor: &Actor) {
-    self.timer.update(delta_t);
-    if self.timer.is_just_over() || actor.animation.is_finished() {
-      let new_state = self.weighted_states.get_next_state();
-      self.state = match new_state {
+  pub fn set_state(&mut self, state: AiState, actor: &mut Actor, player_actor: &Actor) {
+    self.state = state;
+      match self.state {
         AiState::Following => {
-          if actor.cd_bounds.collide_with(&player_actor.cd_bounds) {
-            let x = 32.0_f32.max(player_actor.movable.position.x + rand::gen_range::<f32>(-100., 100.)).min(screen_width() - 32.);
-            let y = 32.0_f32.max(player_actor.movable.position.y + rand::gen_range::<f32>(-100., 100.)).min(screen_height() - 32.);
-            actor.move_to(Vec2::new(x, y));
-            AiState::Wandering
-          } else {
-            new_state
-          }
+          let tp = Vec2::new(player_actor.movable.position.x, player_actor.movable.position.y);
+          actor.move_to(tp);
         },
         AiState::Wandering => {
           let tp = Vec2::new(rand::gen_range::<f32>(32., screen_width() - 32.), rand::gen_range::<f32>(32., screen_height() - 32.));
           actor.move_to(tp);
-          new_state
         },
         AiState::Idle => {
           actor.stop();
-          new_state
         }
       };
       self.refresh_timer();
-    };
+  }
 
-    if self.state == AiState::Following  {
-      let tp = Vec2::new(player_actor.movable.position.x, player_actor.movable.position.y);
-      actor.move_to(tp);
-    }
+  pub fn update(&mut self, delta_t: f32, actor: &mut Actor, player_actor: &Actor) {
+    self.timer.update(delta_t);
+    if self.timer.is_just_over() || actor.animation.is_finished() {
+      self.set_state(self.weighted_states.get_next_state(), actor, player_actor);
+    };
   }
 }

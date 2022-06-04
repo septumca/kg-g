@@ -1,5 +1,13 @@
 use macroquad::prelude::*;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
+
+
+static COUNTER: AtomicUsize = AtomicUsize::new(1);
+
+pub fn generate_id() -> usize {
+  COUNTER.fetch_add(1, Ordering::Relaxed)
+}
 
 pub fn get_vector_rotation(v: &Vec2) -> f32 {
   v.y.atan2(v.x)

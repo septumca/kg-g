@@ -7,6 +7,8 @@ use crate::{world_module::{actor::Actor, projectile::{Projectile, spawn_projecti
 pub struct Player {
   pub actor: Actor,
   pub projectile_timer: Timer,
+  pub invulnerability_timer: Timer,
+  pub invlunerable: bool,
 }
 
 
@@ -15,11 +17,27 @@ impl Player {
     Self {
       actor,
       projectile_timer: Timer::new_timeout(projectile_timeout),
+      invulnerability_timer: Timer::new_timeout(1.),
+      invlunerable: false,
+    }
+  }
+
+  pub fn modify_hp(&mut self, source: usize, amount: isize) {
+    if !self.invlunerable {
+      self.actor.hp.modify(source, amount);
+      self.invlunerable = true;
+      self.invulnerability_timer.reset();
     }
   }
 
   pub fn update(&mut self, delta_t: f32, projectiles: &mut Vec<Projectile>, enemies: &[Actor]) {
     self.projectile_timer.update(delta_t);
+    if self.invulnerability_timer.is_over() {
+      self.invlunerable = false;
+    }
+    if self.invlunerable {
+      self.invulnerability_timer.update(delta_t);
+    }
 
     if self.projectile_timer.is_over() {
       let player_position = &self.actor.movable.position;

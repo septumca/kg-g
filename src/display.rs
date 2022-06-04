@@ -10,6 +10,10 @@ pub struct Renderer {
 
 impl Renderer {
 
+  pub fn draw_player_info(&self, world: &World) {
+    draw_text(format!("HP: {}", world.player.actor.hp.act_hp).as_str(), screen_width() - 60., 16., 24., WHITE);
+  }
+
   pub fn draw_debug(&self, world: &World) {
     if self.debug {
       let font_size: f32 = 16.;
