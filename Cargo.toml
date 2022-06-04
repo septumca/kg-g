@@ -5,12 +5,13 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-#build --target wasm32-unknown-unknown
+# build --target wasm32-unknown-unknown
+# https://macroquad.rs/tutorials/android/
+# MSYS_NO_PATHCONV=1 docker run --rm -v $(pwd):/root/src -w /root/src notfl3/cargo-apk cargo quad-apk build --release # toto nefunguje kvoli https://github.com/not-fl3/macroquad/issues/400
+# MSYS_NO_PATHCONV=1 docker run -it --rm -v $(pwd)":/root/src" -w /root/src notfl3/cargo-apk bash -c "rm -r /usr/local/cargo/registry && cargo quad-apk build --release"
 
 [dependencies]
 macroquad = "0.3.16"
-
-#cargo build --target wasm32-unknown-unknown
 
 [profile.dev.package.'*']
 opt-level = 3
@@ -18,3 +19,8 @@ opt-level = 3
 [profile.release]
 opt-level = 'z'
 lto = "thin"
+
+[package.metadata.android]
+assets = "assets/"
+res = "android_res"
+icon = "@mipmap/ic_launcher"
