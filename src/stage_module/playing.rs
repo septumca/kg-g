@@ -71,7 +71,8 @@ impl Stage for PlayingStage {
       draw_text("PAUSED", screen_width() / 2. - 40., screen_height() / 2. - 4., 32., WHITE);
     }
 
-    self.renderer.draw_actor(&resources.texture_actor, &self.world.get_player().actor);
+    let player_texure = if self.world.player.invlunerable { &resources.texture_actor_flashing } else { &resources.texture_actor };
+    self.renderer.draw_actor(player_texure, &self.world.get_player().actor);
     for actor in self.world.get_ai_actors() {
       self.renderer.draw_actor(&resources.texture_enemy, actor);
     }

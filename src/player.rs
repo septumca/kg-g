@@ -17,7 +17,7 @@ impl Player {
     Self {
       actor,
       projectile_timer: Timer::new_timeout(projectile_timeout),
-      invulnerability_timer: Timer::new_timeout(1.),
+      invulnerability_timer: Timer::new_timeout(0.5),
       invlunerable: false,
     }
   }
