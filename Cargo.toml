@@ -7,11 +7,14 @@ edition = "2021"
 
 # build --target wasm32-unknown-unknown
 # https://macroquad.rs/tutorials/android/
-# MSYS_NO_PATHCONV=1 docker run --rm -v $(pwd):/root/src -w /root/src notfl3/cargo-apk cargo quad-apk build --release # toto nefunguje kvoli https://github.com/not-fl3/macroquad/issues/400
 # MSYS_NO_PATHCONV=1 docker run -it --rm -v $(pwd)":/root/src" -w /root/src notfl3/cargo-apk bash -c "rm -r /usr/local/cargo/registry && cargo quad-apk build --release"
 
 [dependencies]
-macroquad = { version = "0.3", features = ["log-rs"] }
+macroquad = { version = "0.3.16", features = ["log-rs"] }
+
+# based on https://github.com/not-fl3/macroquad/pull/409
+[patch.crates-io] 
+miniquad = { git = "https://github.com/not-fl3/miniquad", rev = "8ad337af4b53f9e65deccf2fd9681936a344b30a" }
 
 [package.metadata.android]
 assets = "assets/"
