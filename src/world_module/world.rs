@@ -15,6 +15,7 @@ pub struct World {
   pub particle_system: ParticleSystem,
   bounds: Rect,
   spawn_timer: Timer,
+  pub score: usize,
 }
 
 impl World {
@@ -27,6 +28,7 @@ impl World {
       particle_system: ParticleSystem::new(),
       bounds: Rect::new(0., 0., screen_width(), screen_height()),
       spawn_timer: Timer::new(0.8),
+      score: 0
     }
   }
 
@@ -66,6 +68,8 @@ impl World {
       .into_iter()
       .partition(|a| a.is_alive());
 
+    let dead: Vec<Actor> = dead;
+    self.score += dead.len();
     self.ai_actors = alive;
     for actor in dead {
       self.ai_controllers.remove(&actor.get_id());

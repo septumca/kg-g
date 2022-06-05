@@ -25,9 +25,9 @@ impl Resources {
     );
 
     let colors_enemy = ReplaceColors::new(
-        Color::from_rgba(57, 99, 50, 255),
-        Color::from_rgba(66, 55, 29, 255),
-        Color::from_rgba(66, 99, 50, 255),
+        Color::from_rgba(57, 159, 50, 255),
+        Color::from_rgba(66, 105, 29, 255),
+        Color::from_rgba(66, 159, 50, 255),
         Color::from_rgba(0, 0, 0, 255),
     );
 

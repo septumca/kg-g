@@ -10,8 +10,17 @@ mod player;
 mod stage_module;
 
 
+fn window_conf() -> Conf {
+  Conf {
+      window_title: "kg-g".to_owned(),
+      window_width: 800,
+      window_height: 600,
+      high_dpi: false,
+      ..Default::default()
+  }
+}
 
-#[macroquad::main("kg-g")]
+#[macroquad::main(window_conf)]
 async fn main() {
   set_pc_assets_folder("assets");
   let image = load_texture("frames.png").await.expect("frames.png should be loaded").get_texture_data();
