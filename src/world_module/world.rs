@@ -1,11 +1,16 @@
 use std::collections::HashMap;
 
-use macroquad::{prelude::*, rand::ChooseRandom};
+use macroquad::{prelude::*};
 
 
 use crate::{player::Player, systems::{ai::{Ai, WeightedStates}, timer::Timer}};
 
 use super::{projectile::Projectile, actor::Actor, particle::{ParticleSystem, Particle}};
+
+pub const WORLD_WIDTH: f32 = 2000.;
+pub const WORLD_HEIGHT: f32 = 2000.;
+
+pub const OUT_OF_BOUNDS_SRC: usize = 0;
 
 pub struct World {
   pub player: Player,
@@ -13,8 +18,8 @@ pub struct World {
   ai_controllers: HashMap<usize, Ai>,
   projectiles: Vec<Projectile>,
   pub particle_system: ParticleSystem,
-  bounds: Rect,
-  spawn_timer: Timer,
+  pub bounds: Rect,
+  pub spawn_timer: Timer,
   pub score: usize,
 }
 
@@ -26,7 +31,7 @@ impl World {
       ai_controllers: HashMap::new(),
       projectiles: vec![],
       particle_system: ParticleSystem::new(),
-      bounds: Rect::new(0., 0., screen_width(), screen_height()),
+      bounds: Rect::new(-WORLD_WIDTH / 2., -WORLD_HEIGHT / 2., WORLD_WIDTH, WORLD_HEIGHT),
       spawn_timer: Timer::new(0.8),
       score: 0
     }
@@ -39,6 +44,14 @@ impl World {
       self.ai_controllers.insert(id, ai);
     }
     self
+  }
+
+  pub fn spawn_enemy(&mut self, pos: Vec2) {
+    let actor = Actor::new(pos, 75., 2);
+    let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 7]));
+
+    self.ai_controllers.insert(actor.get_id(), ai);
+    self.ai_actors.push(actor);
   }
 
   pub fn on_mouse_button_down(&mut self, position: Vec2) {
@@ -103,6 +116,10 @@ impl World {
 
     let actors_clone = self.ai_actors.clone();
     for actor_a in self.ai_actors.iter_mut() {
+      if !self.bounds.contains(actor_a.movable.position) {
+        actor_a.hp.modify(OUT_OF_BOUNDS_SRC, -50);
+        continue;
+      }
       if let Some(ai) = self.ai_controllers.get_mut(&actor_a.get_id()) {
         ai.update(delta_t, actor_a, &self.player.actor);
 
@@ -124,20 +141,6 @@ impl World {
     }
 
     self.spawn_timer.update(delta_t);
-    if self.spawn_timer.is_just_over() {
-      if let Some(pos) = vec![
-        Vec2::new(self.bounds.left(), rand::gen_range::<f32>(self.bounds.top(), self.bounds.bottom())),
-        Vec2::new(self.bounds.right(), rand::gen_range::<f32>(self.bounds.top(), self.bounds.bottom())),
-        Vec2::new(rand::gen_range::<f32>(self.bounds.left(), self.bounds.right()), self.bounds.top()),
-        Vec2::new(rand::gen_range::<f32>(self.bounds.left(), self.bounds.right()), self.bounds.bottom()),
-      ].choose() {
-        let actor = Actor::new(*pos, 75., 2);
-        let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 7]));
-
-        self.ai_controllers.insert(actor.get_id(), ai);
-        self.ai_actors.push(actor);
-      }
-    }
 
     self.cleanup();
   }

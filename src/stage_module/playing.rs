@@ -1,6 +1,6 @@
-use macroquad::prelude::*;
+use macroquad::{prelude::*, rand::ChooseRandom};
 
-use crate::{world_module::{world::World, actor::Actor}, player::Player, systems::ai::{Ai, WeightedStates}, display::Renderer};
+use crate::{world_module::{world::{World}, actor::Actor}, player::Player, systems::ai::{Ai, WeightedStates}, display::Renderer};
 
 use super::{stage_stack::{Stage, StageAction}, resources::Resources};
 
@@ -10,11 +10,14 @@ pub struct PlayingStage {
   world: World,
   paused: bool,
   renderer: Renderer,
+  camera: Camera2D,
+  viewport: (f32, f32)
 }
 
 impl PlayingStage {
   pub fn new() -> Self {
-    let player_actor = Actor::new(Vec2::new(screen_width() / 2., screen_height() / 2.), 100., 5);
+    let player_position = Vec2::new(0., 0.);
+    let player_actor = Actor::new(player_position, 100., 5);
     let player = Player::new(player_actor, 1.);
 
     let mut ai_actors: Vec<(Actor, Ai)> = vec![];
@@ -26,16 +29,48 @@ impl PlayingStage {
       ai_actors.push((actor, ai));
     }
 
+    let ratio = screen_width() / screen_height();
+    let mut i = 1.;
+    if screen_width() > 1000. || screen_height() > 1000. {
+      loop {
+        i += 1.;
+
+        if i > 1000. || (i / ratio) > 1000. {
+          i -=1.;
+          break;
+        }
+      }
+    } else {
+      i = screen_width();
+    }
+
+    let camera = Camera2D::from_display_rect(Rect::new(0.0, 0.0, i, i / ratio));
+
     Self {
+      viewport: (i, i / ratio),
       world: World::new(player).with_ai_actors(ai_actors),
       paused: false,
       renderer: Renderer { debug: false },
+      camera
     }
+  }
+}
+
+impl PlayingStage {
+  fn get_lrtb(&self) -> (f32, f32, f32, f32) {
+    (
+      self.camera.target.x - (self.viewport.0 / 2.),
+      self.camera.target.x + (self.viewport.0 / 2.),
+      self.camera.target.y - (self.viewport.1 / 2.),
+      self.camera.target.y + (self.viewport.1 / 2.),
+    )
   }
 }
 
 impl Stage for PlayingStage {
   fn update(&mut self, _resources: &Resources) -> Option<StageAction> {
+    self.camera.target = self.world.player.actor.movable.position;
+
     if is_key_pressed(KeyCode::D) {
       self.renderer.debug = !self.renderer.debug;
     }
@@ -55,17 +90,38 @@ impl Stage for PlayingStage {
     if !self.paused {
       let delta_t = get_frame_time();
       if is_mouse_button_pressed(MouseButton::Left) {
-        self.world.on_mouse_button_down(Vec2::from(mouse_position()));
+        let m_vec = self.camera.screen_to_world(Vec2::from(mouse_position()));
+        if self.world.bounds.contains(m_vec) {
+          self.world.on_mouse_button_down(m_vec);
+        }
       }
 
       self.world.update(delta_t);
+
+      let (vp_left, vp_right, vp_top, vp_bottom) = self.get_lrtb();
+      let (left, right, top, bottom) = (vp_left.max(self.world.bounds.left()), vp_right.min(self.world.bounds.right()), vp_top.max(self.world.bounds.top()), vp_bottom.min(self.world.bounds.bottom()));
+
+      if self.world.spawn_timer.is_just_over() {
+        if let Some(pos) = vec![
+          Vec2::new(left, rand::gen_range::<f32>(top, bottom)),
+          Vec2::new(right, rand::gen_range::<f32>(top, bottom)),
+          Vec2::new(rand::gen_range::<f32>(left, right), top),
+          Vec2::new(rand::gen_range::<f32>(left, right), bottom),
+        ].choose() {
+          self.world.spawn_enemy(*pos);
+        }
+      }
     }
 
     None
   }
 
   fn draw(&self, resources: &Resources) {
-    clear_background(DARKGRAY);
+    clear_background(BLACK);
+
+    draw_rectangle(self.world.bounds.x, self.world.bounds.x, self.world.bounds.w, self.world.bounds.h, DARKGRAY);
+
+    set_camera(&self.camera);
 
     if self.paused {
       draw_text("PAUSED", screen_width() / 2. - 40., screen_height() / 2. - 4., 32., WHITE);
@@ -83,7 +139,9 @@ impl Stage for PlayingStage {
       self.renderer.draw_particle(&resources.texture_fireball, particle);
     }
 
-    self.renderer.draw_player_info(&self.world);
-    self.renderer.draw_debug(&self.world);
+    let (left, right, top, _) = self.get_lrtb();
+
+    self.renderer.draw_player_info(right, top, &self.world);
+    self.renderer.draw_debug(left, top, &self.world);
   }
 }

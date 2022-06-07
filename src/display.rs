@@ -10,16 +10,16 @@ pub struct Renderer {
 
 impl Renderer {
 
-  pub fn draw_player_info(&self, world: &World) {
-    draw_text(format!("HP: {}", world.player.actor.hp.act_hp).as_str(), screen_width() - 100., 16., 24., WHITE);
-    draw_text(format!("SCORE: {}", world.score).as_str(), screen_width() - 100., 40., 24., WHITE);
+  pub fn draw_player_info(&self, right: f32, top: f32, world: &World) {
+    draw_text(format!("HP: {}", world.player.actor.hp.act_hp).as_str(), right - 150., top + 16., 24., WHITE);
+    draw_text(format!("SCORE: {}", world.score).as_str(), right - 150., top + 40., 24., WHITE);
   }
 
-  pub fn draw_debug(&self, world: &World) {
+  pub fn draw_debug(&self, left: f32, top: f32, world: &World) {
     if self.debug {
       let font_size: f32 = 16.;
-      let o_x: f32 = 4.;
-      let o_y: f32 = 12.;
+      let o_x: f32 = left + 4.;
+      let o_y: f32 = top + 12.;
       let fps = get_fps();
 
       draw_text(format!("fps: {}", fps).as_str(), o_x, o_y, font_size, WHITE);
