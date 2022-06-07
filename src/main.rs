@@ -13,8 +13,8 @@ mod stage_module;
 fn window_conf() -> Conf {
   Conf {
       window_title: "kg-g".to_owned(),
-      window_width: 800,
-      window_height: 600,
+      window_width: 640,
+      window_height: 480,
       high_dpi: false,
       ..Default::default()
   }

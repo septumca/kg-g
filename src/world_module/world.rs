@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use macroquad::{prelude::*, rand::ChooseRandom};
 
 
-use crate::{player::Player, systems::{ai::{Ai, WeightedStates}, timer::Timer}};
+use crate::{player::Player, systems::{ai::{Ai, WeightedStates}, timer::Timer}, utils::{WORLD_WIDTH, WORLD_HEIGHT}};
 
 use super::{projectile::Projectile, actor::Actor, particle::{ParticleSystem, Particle}};
 
@@ -13,7 +13,7 @@ pub struct World {
   ai_controllers: HashMap<usize, Ai>,
   projectiles: Vec<Projectile>,
   pub particle_system: ParticleSystem,
-  bounds: Rect,
+  pub bounds: Rect,
   spawn_timer: Timer,
   pub score: usize,
 }
@@ -26,7 +26,7 @@ impl World {
       ai_controllers: HashMap::new(),
       projectiles: vec![],
       particle_system: ParticleSystem::new(),
-      bounds: Rect::new(0., 0., screen_width(), screen_height()),
+      bounds: Rect::new(0., 0., WORLD_WIDTH, WORLD_HEIGHT),
       spawn_timer: Timer::new(0.8),
       score: 0
     }

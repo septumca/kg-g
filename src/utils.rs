@@ -5,6 +5,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 static COUNTER: AtomicUsize = AtomicUsize::new(1);
 
+pub const WORLD_WIDTH: f32 = 640.;
+pub const WORLD_HEIGHT: f32 = 480.;
+
 pub fn generate_id() -> usize {
   COUNTER.fetch_add(1, Ordering::Relaxed)
 }
