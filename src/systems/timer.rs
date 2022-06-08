@@ -23,6 +23,10 @@ impl Timer {
     self.just_over = false;
   }
 
+  pub fn set_treshold(&mut self, threshold: f32) {
+    self.threshold = threshold;
+  }
+
   pub fn is_over(&self) -> bool {
     self.act > self.threshold
   }

@@ -10,9 +10,14 @@ pub struct Renderer {
 
 impl Renderer {
 
-  pub fn draw_player_info(&self, right: f32, top: f32, world: &World) {
-    draw_text(format!("HP: {}", world.player.actor.hp.act_hp).as_str(), right - 150., top + 16., 24., WHITE);
-    draw_text(format!("SCORE: {}", world.score).as_str(), right - 150., top + 40., 24., WHITE);
+  pub fn draw_player_info(&self, left: f32, top: f32, world: &World, difficulty: usize) {
+    draw_text(
+      format!("HP: {}, SCORE: {}, LVL: {}", world.player.actor.hp.act_hp, world.score, difficulty).as_str(),
+      left + 4.,
+      top + 40.,
+      24.,
+      WHITE
+    );
   }
 
   pub fn draw_debug(&self, left: f32, top: f32, world: &World) {

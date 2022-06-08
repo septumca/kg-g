@@ -1,9 +1,10 @@
-use super::{resources::{Resources}, playing::PlayingStage};
+use super::{resources::{Resources}, playing::PlayingStage, game_over::GameOver};
 
 #[derive(Debug, Clone)]
 pub enum StageAction {
   GameQuit,
   StartGame,
+  GameOver(usize),
   EndGame,
 }
 
@@ -41,11 +42,15 @@ impl StageStack {
     }
 
     match action {
+      Some(StageAction::GameOver(s)) => {
+        self.stack.pop();
+        self.stack.push(Box::new(GameOver::new(s)));
+      },
       Some(StageAction::GameQuit) => {
         self.stack.clear();
       },
       Some(StageAction::StartGame) => {
-        self.stack.push(Box::new(PlayingStage::new()));
+        self.stack.push(Box::new(PlayingStage::new(&resources)));
       }
       Some(StageAction::EndGame) => {
         self.stack.pop();

@@ -24,7 +24,7 @@ impl Player {
 
   pub fn modify_hp(&mut self, source: usize, amount: isize) {
     if !self.invlunerable {
-      self.actor.hp.modify(source, amount);
+      self.actor.hp.modify(source, 0, amount);
       self.invlunerable = true;
       self.invulnerability_timer.reset();
     }
@@ -48,7 +48,7 @@ impl Player {
 
         d_a.partial_cmp(&d_b).unwrap_or_else(|| Ordering::Equal)
       }) {
-        projectiles.push(spawn_projectile_from_actor(player_position, &closest.movable.position));
+        projectiles.push(spawn_projectile_from_actor(self.actor.get_id(), player_position, &closest.movable.position));
         self.projectile_timer.reset();
       }
     }

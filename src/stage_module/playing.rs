@@ -1,21 +1,24 @@
 use macroquad::{prelude::*, rand::ChooseRandom};
 
-use crate::{world_module::{world::{World}, actor::Actor}, player::Player, systems::ai::{Ai, WeightedStates}, display::Renderer};
+use crate::{world_module::{world::{World}, actor::Actor}, player::Player, systems::{ai::{Ai, WeightedStates}, timer::Timer}, display::Renderer};
 
 use super::{stage_stack::{Stage, StageAction}, resources::Resources};
 
-const ENEMIES_COUNT: usize = 2;
+const ENEMIES_COUNT: usize = 0;
+const BASE_SPAWN_TRESHOLD: f32 = 5.;
 
 pub struct PlayingStage {
   world: World,
+  difficulty: usize,
   paused: bool,
   renderer: Renderer,
   camera: Camera2D,
-  viewport: (f32, f32)
+  spawn_timer: Timer,
+  difficulty_timer: Timer,
 }
 
 impl PlayingStage {
-  pub fn new() -> Self {
+  pub fn new(resources: &Resources) -> Self {
     let player_position = Vec2::new(0., 0.);
     let player_actor = Actor::new(player_position, 100., 5);
     let player = Player::new(player_actor, 1.);
@@ -29,46 +32,31 @@ impl PlayingStage {
       ai_actors.push((actor, ai));
     }
 
-    let ratio = screen_width() / screen_height();
-    let mut i = 1.;
-    if screen_width() > 1000. || screen_height() > 1000. {
-      loop {
-        i += 1.;
-
-        if i > 1000. || (i / ratio) > 1000. {
-          i -=1.;
-          break;
-        }
-      }
-    } else {
-      i = screen_width();
-    }
-
-    let camera = Camera2D::from_display_rect(Rect::new(0.0, 0.0, i, i / ratio));
-
     Self {
-      viewport: (i, i / ratio),
+      difficulty: 0,
       world: World::new(player).with_ai_actors(ai_actors),
       paused: false,
       renderer: Renderer { debug: false },
-      camera
+      camera: resources.get_camera(),
+      spawn_timer: Timer::new(2.),
+      difficulty_timer: Timer::new(BASE_SPAWN_TRESHOLD),
     }
   }
 }
 
 impl PlayingStage {
-  fn get_lrtb(&self) -> (f32, f32, f32, f32) {
+  fn get_lrtb(&self, resources: &Resources) -> (f32, f32, f32, f32) {
     (
-      self.camera.target.x - (self.viewport.0 / 2.),
-      self.camera.target.x + (self.viewport.0 / 2.),
-      self.camera.target.y - (self.viewport.1 / 2.),
-      self.camera.target.y + (self.viewport.1 / 2.),
+      self.camera.target.x - (resources.viewport.0 / 2.),
+      self.camera.target.x + (resources.viewport.0 / 2.),
+      self.camera.target.y - (resources.viewport.1 / 2.),
+      self.camera.target.y + (resources.viewport.1 / 2.),
     )
   }
 }
 
 impl Stage for PlayingStage {
-  fn update(&mut self, _resources: &Resources) -> Option<StageAction> {
+  fn update(&mut self, resources: &Resources) -> Option<StageAction> {
     self.camera.target = self.world.player.actor.movable.position;
 
     if is_key_pressed(KeyCode::D) {
@@ -84,7 +72,7 @@ impl Stage for PlayingStage {
     }
 
     if !self.world.player.actor.is_alive() {
-      return Some(StageAction::EndGame);
+      return Some(StageAction::GameOver(self.world.score));
     }
 
     if !self.paused {
@@ -98,18 +86,39 @@ impl Stage for PlayingStage {
 
       self.world.update(delta_t);
 
-      let (vp_left, vp_right, vp_top, vp_bottom) = self.get_lrtb();
+      let (vp_left, vp_right, vp_top, vp_bottom) = self.get_lrtb(resources);
       let (left, right, top, bottom) = (vp_left.max(self.world.bounds.left()), vp_right.min(self.world.bounds.right()), vp_top.max(self.world.bounds.top()), vp_bottom.min(self.world.bounds.bottom()));
 
-      if self.world.spawn_timer.is_just_over() {
+      self.spawn_timer.update(delta_t);
+      self.difficulty_timer.update(delta_t);
+
+      if self.spawn_timer.is_just_over() {
         if let Some(pos) = vec![
           Vec2::new(left, rand::gen_range::<f32>(top, bottom)),
           Vec2::new(right, rand::gen_range::<f32>(top, bottom)),
           Vec2::new(rand::gen_range::<f32>(left, right), top),
           Vec2::new(rand::gen_range::<f32>(left, right), bottom),
         ].choose() {
-          self.world.spawn_enemy(*pos);
+          let actor = Actor::new(*pos, 70. + self.difficulty as f32, 2);
+          let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 7+self.difficulty as i32]));
+          self.world.add_ai_actor(actor, ai);
         }
+      }
+
+      if self.difficulty_timer.is_just_over() {
+        self.difficulty += 1;
+
+        let spawn_treshold = match self.difficulty {
+          1 => 4.,
+          2 => 3.,
+          3..=4 => 2.,
+          5..=7 => 1.,
+          8..=11 => 0.9,
+          12..=16 => 0.7,
+          _ => 0.5,
+        };
+        self.spawn_timer.set_treshold(spawn_treshold);
+        self.spawn_timer.reset();
       }
     }
 
@@ -139,9 +148,9 @@ impl Stage for PlayingStage {
       self.renderer.draw_particle(&resources.texture_fireball, particle);
     }
 
-    let (left, right, top, _) = self.get_lrtb();
+    let (left, _r, top, _b) = self.get_lrtb(resources);
 
-    self.renderer.draw_player_info(right, top, &self.world);
+    self.renderer.draw_player_info(left, top, &self.world, self.difficulty);
     self.renderer.draw_debug(left, top, &self.world);
   }
 }

@@ -26,7 +26,7 @@ async fn main() {
   let image = load_texture("frames.png").await.expect("frames.png should be loaded").get_texture_data();
 
   let resources = Resources::new(image);
-  let playing_stage = PlayingStage::new();
+  let playing_stage = PlayingStage::new(&resources);
   let mainmenu_stage = MainMenu {};
   let mut stage_stack = StageStack::new().with_stages(vec![Box::new(mainmenu_stage), Box::new(playing_stage)]);
 
@@ -37,6 +37,9 @@ async fn main() {
 
     stage_stack.update(&resources);
     stage_stack.draw(&resources);
+
+    #[cfg(debug_assertions)]
+    macroquad_profiler::profiler(Default::default());
 
     next_frame().await
   }

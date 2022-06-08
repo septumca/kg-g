@@ -6,6 +6,7 @@ pub struct Resources {
   pub texture_actor_flashing: Texture2D,
   pub texture_enemy: Texture2D,
   pub texture_fireball: Texture2D,
+  pub viewport: (f32, f32)
 }
 
 impl Resources {
@@ -36,11 +37,31 @@ impl Resources {
     let texture_enemy = customize_image(image.sub_image(Rect::new(16. * 3., 0., 16. * 3., 16.)), colors_enemy);
     let texture_fireball =  Texture2D::from_image(&image.sub_image(Rect::new(16. * 6., 0., 16. * 4., 16.)));
 
+    let ratio = screen_width() / screen_height();
+    let mut i = 1.;
+    if screen_width() > 1000. || screen_height() > 1000. {
+      loop {
+        i += 1.;
+
+        if i > 1000. || (i / ratio) > 1000. {
+          i -=1.;
+          break;
+        }
+      }
+    } else {
+      i = screen_width();
+    }
+
     Self {
+      viewport: (i, i / ratio),
       texture_actor,
       texture_actor_flashing,
       texture_enemy,
       texture_fireball,
     }
+  }
+
+  pub fn get_camera(&self) -> Camera2D {
+    Camera2D::from_display_rect(Rect::new(0.0, 0.0, self.viewport.0, self.viewport.1))
   }
 }

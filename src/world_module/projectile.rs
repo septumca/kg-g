@@ -15,6 +15,7 @@ fn get_flying_animation() -> Animation {
 #[derive(Debug, Clone)]
 pub struct Projectile {
   id: usize,
+  pub origin_id: usize,
   pub movable: Movable,
   pub animation: Animation,
   pub cd_bounds: CdBounds,
@@ -23,9 +24,10 @@ pub struct Projectile {
 }
 
 impl Projectile {
-  pub fn new(position: Vec2, velocity: Vec2) -> Self {
+  pub fn new(origin_id: usize, position: Vec2, velocity: Vec2) -> Self {
     Self {
       id: generate_id(),
+      origin_id,
       movable: Movable::new(position, 150., 1.).with_velocity(velocity),
       animation: get_flying_animation(),
       cd_bounds: CdBounds::new(position, 16., 16.),
@@ -36,7 +38,7 @@ impl Projectile {
 
   pub fn apply(&mut self, actor: &mut Actor) {
     if !actor.hp.has_been_modified_by_source(self.id) {
-      actor.hp.modify(self.id, -1);
+      actor.hp.modify(self.id, self.origin_id, -1);
     }
     self.is_alive = false;
   }
@@ -53,9 +55,9 @@ impl Projectile {
   }
 }
 
-pub fn spawn_projectile_from_actor(position_from: &Vec2, position_to: &Vec2) -> Projectile {
+pub fn spawn_projectile_from_actor(origin_id: usize, position_from: &Vec2, position_to: &Vec2) -> Projectile {
   let velocity = (*position_to - *position_from).normalize();
   let position = *position_from + (velocity * 32.);
 
-  Projectile::new(position, velocity)
+  Projectile::new(origin_id, position, velocity)
 }

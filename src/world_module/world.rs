@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use macroquad::{prelude::*};
 
 
-use crate::{player::Player, systems::{ai::{Ai, WeightedStates}, timer::Timer}};
+use crate::{player::Player, systems::ai::Ai};
 
 use super::{projectile::Projectile, actor::Actor, particle::{ParticleSystem, Particle}};
 
@@ -19,7 +19,6 @@ pub struct World {
   projectiles: Vec<Projectile>,
   pub particle_system: ParticleSystem,
   pub bounds: Rect,
-  pub spawn_timer: Timer,
   pub score: usize,
 }
 
@@ -32,7 +31,6 @@ impl World {
       projectiles: vec![],
       particle_system: ParticleSystem::new(),
       bounds: Rect::new(-WORLD_WIDTH / 2., -WORLD_HEIGHT / 2., WORLD_WIDTH, WORLD_HEIGHT),
-      spawn_timer: Timer::new(0.8),
       score: 0
     }
   }
@@ -46,10 +44,7 @@ impl World {
     self
   }
 
-  pub fn spawn_enemy(&mut self, pos: Vec2) {
-    let actor = Actor::new(pos, 75., 2);
-    let ai = Ai::new(WeightedStates::new_idle_wandering(&[1, 5, 7]));
-
+  pub fn add_ai_actor(&mut self, actor: Actor, ai: Ai) {
     self.ai_controllers.insert(actor.get_id(), ai);
     self.ai_actors.push(actor);
   }
@@ -81,11 +76,14 @@ impl World {
       .into_iter()
       .partition(|a| a.is_alive());
 
-    let dead: Vec<Actor> = dead;
-    self.score += dead.len();
     self.ai_actors = alive;
     for actor in dead {
       self.ai_controllers.remove(&actor.get_id());
+      if let Some(hp_mod) = actor.hp.get_last_modification() {
+        if hp_mod.source_origin == self.player.actor.get_id() {
+          self.score += 1;
+        }
+      }
     }
   }
 
@@ -117,7 +115,7 @@ impl World {
     let actors_clone = self.ai_actors.clone();
     for actor_a in self.ai_actors.iter_mut() {
       if !self.bounds.contains(actor_a.movable.position) {
-        actor_a.hp.modify(OUT_OF_BOUNDS_SRC, -50);
+        actor_a.hp.modify(OUT_OF_BOUNDS_SRC, OUT_OF_BOUNDS_SRC, -50);
         continue;
       }
       if let Some(ai) = self.ai_controllers.get_mut(&actor_a.get_id()) {
@@ -139,8 +137,6 @@ impl World {
         actor_a.movable.add_impuls(imp);
       }
     }
-
-    self.spawn_timer.update(delta_t);
 
     self.cleanup();
   }
