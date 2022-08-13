@@ -2,7 +2,6 @@ use macroquad::{prelude::*, rand::ChooseRandom};
 
 
 const EPSILON: f32 = 0.004;
-const DANGER_EPSILON: f32 = 0.5;
 const SHIP_SPEED: f32 = 150.;
 const SHIP_TURN_SPEED: f32 = 360.;
 const PROJECTILE_SPEED: f32 = 500.;
@@ -12,6 +11,8 @@ pub enum Collider {
   Asteroid(Vec2, f32, u8),
   Projectile(Rect, Vec2)
 }
+
+pub type DangerData = f32;
 
 pub fn line_line_collision(
   x1: f32, y1: f32, x2: f32, y2: f32,
@@ -56,7 +57,7 @@ pub fn line_circle_intersection(pos: Vec2, r: f32, l1: f32, l2: f32, l3: f32, l4
 }
 
 fn is_point_in_radius(pos: Vec2, radius: f32, point: Vec2) -> bool {
-  (pos - point).length() < radius
+  (pos - point).length_squared() < radius.powi(2)
 }
 
 fn get_rect_points(rect: &Rect) -> (Vec2, Vec2, Vec2, Vec2) {
@@ -272,7 +273,6 @@ impl Updatable for Ship {
   fn update(&mut self, dt: f32) {
     self.shoot_cd.update(dt);
     self.mov.update(dt);
-    self.mov.wrap_around();
   }
 }
 
@@ -310,7 +310,7 @@ pub struct Asteroid {
   sides: u8,
   radius: f32,
   is_alive: bool,
-  dangerous: Option<f32>,
+  dangerous: Option<DangerData>,
 }
 
 impl Asteroid {
@@ -344,15 +344,7 @@ impl Asteroid {
     a
   }
 
-  fn get_eta_to_movable(&self, mov: &Movable, step: f32, step_count: i32) -> Option<f32> {
-    //calculate line between asteroid pos + vel * 10 and ship pos + vel * 10 + vel.norm * asteroid radius
-    //find intersection - decide how much time would asteroid get to got to intersection,
-    //and ship to ship pos + vel * 10 position
-    //then compare times ==> PROFIT?
-
-    //when ship doesnt have any velocity, then calculate how much the asteroid would take to contain ship position (how?)
-
-
+  fn get_eta_to_movable(&self, mov: &Movable, step: f32, step_count: usize) -> Option<DangerData> {
     for i in 1..=step_count {
       let mov_pos = mov.pos + mov.vel * step * i as f32;
       let ast_pos = self.mov.pos + self.mov.vel * step * i as f32;
@@ -366,14 +358,13 @@ impl Asteroid {
   }
 
   pub fn determine_danger(&mut self, ship: &Ship) {
-    self.dangerous = self.get_eta_to_movable(&ship.mov, 0.5, 10);
+    self.dangerous = self.get_eta_to_movable(&ship.mov, 1., 10);
   }
 }
 
 impl Updatable for Asteroid {
   fn update(&mut self, dt: f32) {
     self.mov.update(dt);
-    self.mov.wrap_around();
   }
 }
 
@@ -381,9 +372,9 @@ impl Drawable for Asteroid {
   fn draw(&self) {
     let color = if self.dangerous.is_some() { RED } else { GRAY };
     draw_poly_lines(self.mov.pos.x, self.mov.pos.y, self.sides, self.radius, self.mov.rot, 2., color);
-    if let Some(eta) = self.dangerous {
+    if let Some(eta) = &self.dangerous {
       draw_text(
-        &format!("ETA: {:.1}", eta),
+        &format!("ETA:{:.0}", eta),
         self.mov.pos.x - self.radius / 2., self.mov.pos.y - self.radius - 20.,
         24., RED
       );
@@ -458,11 +449,7 @@ impl CleanupAble for Projectile {
   }
 
   fn is_alive(&self) -> bool {
-    !self.has_collided &&
-      self.mov.pos.x <= screen_width() &&
-      self.mov.pos.x >= 0. &&
-      self.mov.pos.y <= screen_height() &&
-      self.mov.pos.y >= 0.
+    !self.has_collided
   }
 }
 
@@ -473,6 +460,11 @@ impl Collidable for Projectile {
 }
 
 impl GameObject for Projectile {}
+
+pub fn update_camera(s: &Ship, c: &mut Camera2D) {
+  c.target = vec2(s.mov.pos.x, s.mov.pos.y);
+}
+
 
 #[cfg(test)]
 mod tests {

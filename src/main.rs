@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 use macroquad::rand::ChooseRandom;
-use utils::{Ship, Asteroid, Timer, GameObject, Collider, get_vector_rotation};
+use utils::{Ship, Asteroid, Timer, GameObject, Collider, get_vector_rotation, update_camera};
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
@@ -42,11 +42,12 @@ async fn main() {
   set_pc_assets_folder("assets");
   let player = Rc::new(RefCell::new(Ship::new(vec2(screen_width() / 2., screen_height() / 2.))));
   let mut asteroid_spawn_timer = Timer::new(5.);
+  let mut c = Camera2D::from_display_rect(Rect::new(0., 0., screen_width(), screen_height()));
 
   let mut asteroids: Vec<Weak<RefCell<Asteroid>>> = vec![];
   let mut game_objects: Vec<Rc<RefCell<dyn GameObject>>> = vec![player.clone()];
 
-  for _ in 0..4 {
+  for _ in 0..5 {
     let a = spawn_random_asteroid();
     asteroids.push(Rc::downgrade(&a));
     game_objects.push(a);
@@ -57,48 +58,45 @@ async fn main() {
   loop {
     let dt = get_frame_time();
     clear_background(BLACK);
+
     game_objects.retain(|o| o.borrow().is_alive());
     asteroids.retain(|a| a.strong_count() > 0);
 
     if is_key_released(KeyCode::P) {
       paused = !paused;
+      println!("PAUSED: {}", paused);
     }
 
-    if is_key_released(KeyCode::Enter) {
-      for a in &asteroids {
-        if let Some(a) = a.upgrade() {
-          a.borrow_mut().determine_danger(&player.borrow());
+    {
+      let mut player = player.borrow_mut();
+      update_camera(&player, &mut c);
+      set_camera(&c);
+
+      if is_key_down(KeyCode::W) {
+        player.throttle_up(dt);
+      }
+      if is_key_down(KeyCode::S) {
+        player.stop(dt);
+      }
+      if is_key_down(KeyCode::A) {
+        player.turn_left(dt);
+      }
+      if is_key_down(KeyCode::D) {
+        player.turn_right(dt);
+      }
+      if is_key_down(KeyCode::Space) {
+        if let Some(p) = player.shoot() {
+          game_objects.push(Rc::new(RefCell::new(p)));
         }
       }
     }
 
     if !paused {
-      {
-        let mut player = player.borrow_mut();
-        if is_key_down(KeyCode::W) {
-          player.throttle_up(dt);
-        }
-        if is_key_down(KeyCode::S) {
-          player.stop(dt);
-        }
-        if is_key_down(KeyCode::A) {
-          player.turn_left(dt);
-        }
-        if is_key_down(KeyCode::D) {
-          player.turn_right(dt);
-        }
-        if is_key_down(KeyCode::Space) {
-          if let Some(p) = player.shoot() {
-            game_objects.push(Rc::new(RefCell::new(p)));
-          }
-        }
-      }
-
       for e in &game_objects {
         e.borrow_mut().update(dt);
       }
 
-      asteroid_spawn_timer.update(dt);
+      // asteroid_spawn_timer.update(dt);
       if asteroid_spawn_timer.is_just_over() {
         let a = spawn_random_asteroid();
         asteroids.push(Rc::downgrade(&a));
@@ -140,18 +138,18 @@ async fn main() {
         }
         game_objects.extend(new_game_objects);
       }
-    }
 
-    for a in &asteroids {
-      if let Some(a) = a.upgrade() {
-        a.borrow_mut().determine_danger(&player.borrow());
+      for a in &asteroids {
+        if let Some(a) = a.upgrade() {
+          a.borrow_mut().determine_danger(&player.borrow());
+        }
       }
     }
 
     for e in &game_objects {
       e.borrow().draw();
     }
-    draw_text(&format!("Game Objects: {}, asteroid: {}, paused: {}", game_objects.len(), asteroids.len(), paused), 2., screen_height() - 24., 22., WHITE);
+    // draw_text(&format!("Game Objects: {}, asteroid: {}, paused: {}", game_objects.len(), asteroids.len(), paused), 2., screen_height() - 24., 22., WHITE);
 
     #[cfg(debug_assertions)]
     macroquad_profiler::profiler(Default::default());
